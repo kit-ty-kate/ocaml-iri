@@ -89,6 +89,7 @@ let update_pos pos str =
   in
   Uutf.String.fold_utf_8 f pos str
 
+let upd pos lexbuf = update_pos pos (Sedlexing.Utf8.lexeme lexbuf)
 
 (* rules from IRI RFC *)
 
@@ -102,11 +103,6 @@ let ucschar = [%sedlex.regexp?
 
 let iprivate = [%sedlex.regexp?
     0xE000..0xF8FF | 0xF0000..0xFFFFD | 0x100000..0x10FFFD]
-
-open Iri_types
-module L = Sedlexing.Utf8
-
-let upd pos lexbuf = update_pos pos (L.lexeme lexbuf)
 
 let iunreserved = [%sedlex.regexp? alpha | digit | Chars "-._~" | ucschar]
 let pct_encoded = [%sedlex.regexp? '%', hexdig, hexdig ]
@@ -141,6 +137,9 @@ let ihost = [%sedlex.regexp? ip_literal | ipv4address | ireg_name]
 let port = [%sedlex.regexp? Star(digit)]
 
 let ipchar = [%sedlex.regexp? iunreserved|pct_encoded|sub_delims|':'|'@']
+
+open Iri_types
+module L = Sedlexing.Utf8
 
 let fragment_opt pos lexbuf =
   match%sedlex lexbuf with
@@ -259,92 +258,7 @@ let iri ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
   |  _ ->
       let pos = upd pos lexbuf in
       error_pos pos
-(*
-let lexer lexbuf =
-  let buf = lexbuf.L.stream in
-  match%sedlex buf with
-    '[' -> L.update lexbuf; LBRACKET
-  | ']' -> L.update lexbuf; RBRACKET
-  | '-' -> L.update lexbuf; MINUS
-  | '.' -> L.update lexbuf; DOT
-  | '_' -> L.update lexbuf; UNDERSCORE
-  | '~' -> L.update lexbuf; TILDE
-  | ':' -> L.update lexbuf; COLON
-  | '/' -> L.update lexbuf; SLASH
-  | '?' -> L.update lexbuf; QMARK
-  | '#' -> L.update lexbuf; SHARP
-  | '@' -> L.update lexbuf; AROBAS
-  | '!' -> L.update lexbuf; BANG
-  | '$' -> L.update lexbuf; DOLLAR
-  | '&' -> L.update lexbuf; AMPERSAND
-  | '\'' -> L.update lexbuf; QUOTE
-  | '(' -> L.update lexbuf; LPAR
-  | ')' -> L.update lexbuf; RPAR
-  | '*' -> L.update lexbuf; STAR
-  | '+' -> L.update lexbuf; PLUS
-  | ',' -> L.update lexbuf; COMMA
-  | ';' -> L.update lexbuf; SEMICOLON
-  | '=' -> L.update lexbuf; EQUAL
-  | '%' -> L.update lexbuf; PERCENT
-  | 'A' -> L.update lexbuf; UA (L.lexeme lexbuf)
-  | 'B' -> L.update lexbuf; UB (L.lexeme lexbuf)
-  | 'C' -> L.update lexbuf; UC (L.lexeme lexbuf)
-  | 'D' -> L.update lexbuf; UD (L.lexeme lexbuf)
-  | 'E' -> L.update lexbuf; UE (L.lexeme lexbuf)
-  | 'F' -> L.update lexbuf; UF (L.lexeme lexbuf)
-  | 'G' -> L.update lexbuf; UG (L.lexeme lexbuf)
-  | 'H' -> L.update lexbuf; UH (L.lexeme lexbuf)
-  | 'I' -> L.update lexbuf; UI (L.lexeme lexbuf)
-  | 'J' -> L.update lexbuf; UJ (L.lexeme lexbuf)
-  | 'K' -> L.update lexbuf; UK (L.lexeme lexbuf)
-  | 'L' -> L.update lexbuf; UL (L.lexeme lexbuf)
-  | 'M' -> L.update lexbuf; UM (L.lexeme lexbuf)
-  | 'N' -> L.update lexbuf; UN (L.lexeme lexbuf)
-  | 'O' -> L.update lexbuf; UO (L.lexeme lexbuf)
-  | 'P' -> L.update lexbuf; UP (L.lexeme lexbuf)
-  | 'Q' -> L.update lexbuf; UQ (L.lexeme lexbuf)
-  | 'R' -> L.update lexbuf; UR (L.lexeme lexbuf)
-  | 'S' -> L.update lexbuf; US (L.lexeme lexbuf)
-  | 'T' -> L.update lexbuf; UT (L.lexeme lexbuf)
-  | 'U' -> L.update lexbuf; UU (L.lexeme lexbuf)
-  | 'V' -> L.update lexbuf; UV (L.lexeme lexbuf)
-  | 'W' -> L.update lexbuf; UW (L.lexeme lexbuf)
-  | 'X' -> L.update lexbuf; UX (L.lexeme lexbuf)
-  | 'Y' -> L.update lexbuf; UY (L.lexeme lexbuf)
-  | 'Z' -> L.update lexbuf; UZ (L.lexeme lexbuf)
-  | 'a' -> L.update lexbuf; A (L.lexeme lexbuf)
-  | 'b' -> L.update lexbuf; B (L.lexeme lexbuf)
-  | 'c' -> L.update lexbuf; C (L.lexeme lexbuf)
-  | 'd' -> L.update lexbuf; D (L.lexeme lexbuf)
-  | 'e' -> L.update lexbuf; E (L.lexeme lexbuf)
-  | 'f' -> L.update lexbuf; F (L.lexeme lexbuf)
-  | 'g' -> L.update lexbuf; G (L.lexeme lexbuf)
-  | 'h' -> L.update lexbuf; H (L.lexeme lexbuf)
-  | 'i' -> L.update lexbuf; I (L.lexeme lexbuf)
-  | 'j' -> L.update lexbuf; J (L.lexeme lexbuf)
-  | 'k' -> L.update lexbuf; K (L.lexeme lexbuf)
-  | 'l' -> L.update lexbuf; L (L.lexeme lexbuf)
-  | 'm' -> L.update lexbuf; M (L.lexeme lexbuf)
-  | 'n' -> L.update lexbuf; N (L.lexeme lexbuf)
-  | 'o' -> L.update lexbuf; O (L.lexeme lexbuf)
-  | 'p' -> L.update lexbuf; P (L.lexeme lexbuf)
-  | 'q' -> L.update lexbuf; Q (L.lexeme lexbuf)
-  | 'r' -> L.update lexbuf; R (L.lexeme lexbuf)
-  | 's' -> L.update lexbuf; S (L.lexeme lexbuf)
-  | 't' -> L.update lexbuf; T (L.lexeme lexbuf)
-  | 'u' -> L.update lexbuf; U (L.lexeme lexbuf)
-  | 'v' -> L.update lexbuf; V (L.lexeme lexbuf)
-  | 'w' -> L.update lexbuf; W (L.lexeme lexbuf)
-  | 'x' -> L.update lexbuf; X (L.lexeme lexbuf)
-  | 'y' -> L.update lexbuf; Y (L.lexeme lexbuf)
-  | 'z' -> L.update lexbuf; Z (L.lexeme lexbuf)
 
-  | digit -> L.update lexbuf; Digit (L.lexeme lexbuf)
-  | iprivate -> L.update lexbuf; Iprivate (L.lexeme lexbuf)
-  | ucschar -> L.update lexbuf; Ucschar (L.lexeme lexbuf)
-  | eof -> L.update lexbuf; EOF
-  | _ -> L.update lexbuf; L.raise_ParseError lexbuf
-*)
 
 
 
