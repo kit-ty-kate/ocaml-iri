@@ -1,0 +1,11 @@
+iri.cmo : iri_types.cmi iri_lexer.cmi iri.cmi
+iri.cmx : iri_types.cmx iri_lexer.cmx iri.cmi
+iri_lexer.cmo : iri_types.cmi iri_lexer.cmi
+iri_lexer.cmx : iri_types.cmx iri_lexer.cmi
+iri_types.cmo : iri_types.cmi
+iri_types.cmx : iri_types.cmi
+test_parser.cmo : iri_lexer.cmi iri.cmi
+test_parser.cmx : iri_lexer.cmx iri.cmx
+iri.cmi :
+iri_lexer.cmi : iri_types.cmi
+iri_types.cmi :
