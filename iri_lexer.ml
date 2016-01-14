@@ -148,7 +148,7 @@ let fragment_opt pos lexbuf =
       let len = String.length str in
       let pos = upd pos lexbuf in
       (pos, Some (String.sub str 1 (len-1)))
-  | '?', any ->
+  | '#', any ->
       error_pos pos
   | _ ->
       Sedlexing.rollback lexbuf;
@@ -259,16 +259,3 @@ let iri ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
       let pos = upd pos lexbuf in
       error_pos pos
 
-
-
-
-
-
-
-
-
-
-
-
-
-                  
