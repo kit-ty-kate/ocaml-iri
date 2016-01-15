@@ -13,3 +13,6 @@ type iri = {
 type iri_reference = Iri of iri | Rel of iri
 
 val to_string : ?encode:bool -> iri -> string
+
+val pct_decode : string -> string
+val map_opt : ('a -> 'b) -> 'a option -> 'b option

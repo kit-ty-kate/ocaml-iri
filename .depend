@@ -6,6 +6,6 @@ iri_types.cmo : iri_types.cmi
 iri_types.cmx : iri_types.cmi
 test_parser.cmo : iri_lexer.cmi iri.cmi
 test_parser.cmx : iri_lexer.cmx iri.cmx
-iri.cmi :
+iri.cmi : iri_types.cmi
 iri_lexer.cmi : iri_types.cmi
 iri_types.cmi :

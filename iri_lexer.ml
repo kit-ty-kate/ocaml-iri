@@ -12,7 +12,8 @@ let lf = [%sedlex.regexp? 0x0A] (* line feed *)
 let crlf = [%sedlex.regexp? cr,lf] (* Internet standard newline *)
 let ctl = [%sedlex.regexp? 0x00..0x1F | 0x7F] (* controls *)
 let dquote = [%sedlex.regexp? '"'] (* Double Quote, \x22 *)
-let hexdig = [%sedlex.regexp? digit | 'A'..'F']
+let hexdig = [%sedlex.regexp? digit | 'A'..'F' | 'a'..'f']
+   (* we tolerate lowercase *)
 let htab = [%sedlex.regexp? 0x09] (* horizontal tab *)
 let sp = [%sedlex.regexp? ' '] (* space, \x20 *)
 let wsp = [%sedlex.regexp? sp | htab] (* white space *)
@@ -123,12 +124,12 @@ let ipv6address = [%sedlex.regexp?
     ( h16,':',h16,':',h16,':',h16,':',h16,':',h16,':',ls32 )
   | ("::" ,h16,':',h16,':',h16,':',h16,':',h16,':',ls32)
   | (h16,"::",h16,':',h16,':',h16,':',h16,':',ls32)
-  | (h16,':',h16,"::",h16,':',h16,':',h16,':',ls32)
-  | (h16,':',h16,':',h16,"::",h16,':',h16,':',ls32)
-  | (h16,':',h16,':',h16,':',h16,"::",h16,':',ls32)
-  | (h16,':',h16,':',h16,':',h16,':',h16,"::",ls32)
-  | (h16,':',h16,':',h16,':',h16,':',h16,':',h16,"::",h16)
-  | (h16,':',h16,':',h16,':',h16,':',h16,':',h16,':',h16,"::")
+  | (Opt(h16,':'),h16,"::",h16,':',h16,':',h16,':',ls32)
+  | (Opt(h16,':'),Opt(h16,':'),h16,"::",h16,':',h16,':',ls32)
+  | (Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),h16,"::",h16,':',ls32)
+  | (Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),h16,"::",ls32)
+  | (Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),h16,"::",h16)
+  | (Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),Opt(h16,':'),h16,"::")
 ]
 
 let ip_literal = [%sedlex.regexp? '[', (ipv6address|ipvfuture), ']']
@@ -238,20 +239,37 @@ let ihier_part pos lexbuf =
       let pos = upd pos lexbuf in
       let (pos, path) = isegment_list [str] pos lexbuf in
       (pos, None, None, None, Relative path)
-  | _ ->
+  | _ -> (* ipath-empty *)
       Sedlexing.rollback lexbuf ;
       (pos, None, None, None, Relative [])
+
+let assert_eof pos lexbuf =
+  match%sedlex lexbuf with
+    eof -> ()
+  | _ -> error_pos pos
+
+let pct_decode_path =
+  let f = List.map Iri_types.pct_decode in
+  function
+    Absolute l -> Absolute (f l)
+  | Relative l -> Relative (f l)
 
 let iri ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
   match%sedlex lexbuf with
     alpha, Star(alpha|digit|Chars"+-."), ':' ->
       let str = L.lexeme lexbuf in
       let len = String.length str in
-      let scheme = String.sub str 0 (len - 1) in
+      let scheme = Iri_types.pct_decode (String.sub str 0 (len - 1)) in
       let pos = upd pos lexbuf in
       let (pos, user, host, port, path) = ihier_part pos lexbuf in
       let (pos, query) = query_opt pos lexbuf in
       let (pos, fragment) = fragment_opt pos lexbuf in
+      let user = Iri_types.map_opt Iri_types.pct_decode user in
+      let host = Iri_types.map_opt Iri_types.pct_decode host in
+      let path = pct_decode_path path in
+      (* FIXME: decode query ? *)
+      let fragment = Iri_types.map_opt Iri_types.pct_decode fragment in
+      assert_eof pos lexbuf ;
       { scheme ; user ; host ; port ; path ;
         query; fragment;
       }
