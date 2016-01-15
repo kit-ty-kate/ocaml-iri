@@ -32,3 +32,5 @@ val with_query : iri -> string option -> iri
 
 val fragment : iri -> string option
 val with_fragment : iri -> string option -> iri
+
+val normalize: ?nfkc:bool -> iri -> iri

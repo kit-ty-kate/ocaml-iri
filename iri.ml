@@ -41,4 +41,4 @@ let with_query t query = { t with query }
 let fragment t = t.fragment
 let with_fragment t fragment = { t with fragment }
 
-
+let normalize = Iri_types.normalize

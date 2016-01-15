@@ -16,3 +16,5 @@ val to_string : ?encode:bool -> iri -> string
 
 val pct_decode : string -> string
 val map_opt : ('a -> 'b) -> 'a option -> 'b option
+
+val normalize: ?nfkc:bool -> iri -> iri

@@ -2,7 +2,7 @@ open Iri
 
 let test_string str =
   try
-    let iri = of_string str in
+    let iri = Iri.normalize ~nfkc: true (of_string str) in
     let str2 = Iri.to_string iri in
     print_endline
       (Printf.sprintf "%s -> %s%s" str str2

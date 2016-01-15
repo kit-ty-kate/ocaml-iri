@@ -270,12 +270,38 @@ let remove_dot_segments t =
 
 let map_opt f = function None -> None | Some x -> Some (f x)
 
+let normalize_host s =
+  let len = String.length s in
+  if len > 0 then
+    match String.get s 0 with
+      '[' -> s
+    | _ -> String.lowercase s
+  else
+    s
+
 let normalize_case t =
   { t with
     scheme = String.lowercase t.scheme ;
-    host = map_opt String.lowercase t.host ;
+    host = map_opt normalize_host t.host ;
   }
 
-let normalize t =
-  normalize_case ( remove_dot_segments t )
+let normalize_nfkc t =
+  let f = Uunf_string.normalize_utf_8 `NFKC in
+  let path =
+    match t.path with
+      Absolute l -> Absolute (List.map f l)
+    | Relative l -> Relative (List.map f l)
+  in
+  { t with
+    host = map_opt f t.host ;
+    path ;
+    user = map_opt f t.user ;
+    query = map_opt f t.query ; (* beware: the query is not %-decoded *)
+    fragment = map_opt f t.fragment ;
+  }
+
+let normalize ?(nfkc=true) t =
+  let t = normalize_case ( remove_dot_segments t ) in
+  if nfkc then normalize_nfkc t else t
+
 
