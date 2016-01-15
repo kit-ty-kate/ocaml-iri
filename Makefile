@@ -77,7 +77,7 @@ iri_parser.ml	iri_parser.mli: iri_parser.mly
 test: test_parser
 
 test_parser: $(LIB_BYTE) test_parser.ml
-	$(OCAMLFIND) ocamlc -o $@ -package $(PACKAGES) -linkpkg $^
+	$(OCAMLFIND) ocamlc -o $@ -package $(PACKAGES),unix -linkpkg $^
 
 ##########
 .PHONY: doc

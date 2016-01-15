@@ -13,3 +13,4 @@ val string_of_error : loc * string -> string
 val loc : pos -> pos -> loc
 val loc_of_pos : pos -> int -> loc
 val iri : ?pos:pos -> Sedlexing.lexbuf -> Iri_types.iri
+val iri_reference : ?pos:pos -> Sedlexing.lexbuf -> Iri_types.iri_reference

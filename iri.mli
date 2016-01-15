@@ -4,9 +4,19 @@ type path = Iri_types.path =
 | Relative of string list
 
 type iri
+type iri_reference = Iri of iri | Rel of iri
 
-val of_string : string -> iri
+val is_absolute : iri -> bool
+val is_relative : iri -> bool
+
+(** Read an IRI from the given string.
+  @param normalize tells whether to normalize to IRI or not.
+   Default is [true].*)
+val of_string : ?normalize:bool -> string -> iri
 val to_string : ?encode: bool -> iri -> string
+
+val ref_of_string : ?normalize:bool -> string -> iri_reference
+val ref_to_string : ?encode: bool -> iri_reference -> string
 
 val scheme : iri -> string
 val with_scheme : iri -> string -> iri

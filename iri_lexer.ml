@@ -220,6 +220,14 @@ let iauthority_with_user pos lexbuf =
       let (pos, h, p) = iauthority pos lexbuf in
       (pos, None, h, p)
 
+let ipath_absolute pos lexbuf =
+  let str = L.lexeme lexbuf in
+  let len = String.length str in
+  let str = String.sub str 1 (len - 1) in
+  let pos = upd pos lexbuf in
+  let (pos, path) = isegment_list [str] pos lexbuf in
+  (pos, None, None, None, Absolute path)
+
 let ihier_part pos lexbuf =
   match%sedlex lexbuf with
     "//" ->
@@ -227,21 +235,18 @@ let ihier_part pos lexbuf =
       let (pos, u, h, p) = iauthority_with_user pos lexbuf in
       let (pos, path) = ipath_abempty pos lexbuf in
       (pos, u, Some h, p, path)
-  | '/', Plus(ipchar) -> (*ipath-absolute *)
-      let str = L.lexeme lexbuf in
-      let len = String.length str in
-      let str = String.sub str 1 (len - 1) in
-      let pos = upd pos lexbuf in
-      let (pos, path) = isegment_list [str] pos lexbuf in
-      (pos, None, None, None, Absolute path)
+  | '/', Plus(ipchar) -> ipath_absolute pos lexbuf      
   | Plus(ipchar) -> (* ipath_rootless *)
       let str = L.lexeme lexbuf in
       let pos = upd pos lexbuf in
       let (pos, path) = isegment_list [str] pos lexbuf in
       (pos, None, None, None, Relative path)
-  | _ -> (* ipath-empty *)
+  | '?' | '#' -> (* ipath-empty *)
       Sedlexing.rollback lexbuf ;
       (pos, None, None, None, Relative [])
+  | _ ->
+      let pos = upd pos lexbuf in
+      error_pos pos
 
 let assert_eof pos lexbuf =
   match%sedlex lexbuf with
@@ -254,7 +259,45 @@ let pct_decode_path =
     Absolute l -> Absolute (f l)
   | Relative l -> Relative (f l)
 
-let iri ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
+let irelative_part pos lexbuf =
+  match%sedlex lexbuf with
+  | "//" ->
+      let pos = upd pos lexbuf in
+      let (pos, u, h, p) = iauthority_with_user pos lexbuf in
+      let (pos, path) = ipath_abempty pos lexbuf in
+      (pos, u, Some h, p, path)
+  | '/', Plus(ipchar) -> ipath_absolute pos lexbuf 
+  | Plus(iunreserved|pct_encoded|sub_delims|'@') -> (* ipath-noscheme *)
+      let str = L.lexeme lexbuf in
+      let pos = upd pos lexbuf in
+      let (pos, path) = isegment_list [str] pos lexbuf in
+      (pos, None, None, None, Relative path)
+  | '?' | '#' -> (* ipath-empty *)
+      Sedlexing.rollback lexbuf ;
+      (pos, None, None, None, Relative []) 
+  | _ ->
+      let pos = upd pos lexbuf in
+      error_pos pos
+
+let relative_iri pos lexbuf =
+  let (pos, user, host, port, path) = irelative_part pos lexbuf in
+  let (pos, query) = query_opt pos lexbuf in
+  let (pos, fragment) = fragment_opt pos lexbuf in
+  let user = Iri_types.map_opt Iri_types.pct_decode user in
+  let host = Iri_types.map_opt Iri_types.pct_decode host in
+  let path = pct_decode_path path in
+  (* FIXME: decode query ? *)
+  let fragment = Iri_types.map_opt Iri_types.pct_decode fragment in
+  assert_eof pos lexbuf ;
+  let iri =
+    { scheme = "" ;
+      user ; host ; port ; path ;
+      query; fragment;
+    }
+  in
+  Rel iri
+
+let iri_reference ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
   match%sedlex lexbuf with
     alpha, Star(alpha|digit|Chars"+-."), ':' ->
       let str = L.lexeme lexbuf in
@@ -270,10 +313,18 @@ let iri ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
       (* FIXME: decode query ? *)
       let fragment = Iri_types.map_opt Iri_types.pct_decode fragment in
       assert_eof pos lexbuf ;
-      { scheme ; user ; host ; port ; path ;
-        query; fragment;
-      }
+      let iri =
+        { scheme ; user ; host ; port ; path ;
+          query; fragment;
+        }
+      in
+      Iri iri
   |  _ ->
-      let pos = upd pos lexbuf in
-      error_pos pos
+      Sedlexing.rollback lexbuf ;
+      relative_iri pos lexbuf
+
+let iri ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
+  match iri_reference ~pos lexbuf with
+    Iri iri -> iri
+  | _ -> error_pos ~msg: "Not an absolute IRI" pos
 

@@ -206,8 +206,11 @@ let to_string =
   fun ?(encode=true) iri  ->
     let has_ihier = iri.host <> None in
     let b = Buffer.create 256 in
-    Buffer.add_string b iri.scheme ;
-    Buffer.add_string b ":" ;
+    if iri.scheme <> "" then
+      (
+       Buffer.add_string b iri.scheme ;
+       Buffer.add_string b ":"
+      );
     if has_ihier then Buffer.add_string b "//";
     (match iri.user with
        None -> ()
@@ -243,6 +246,10 @@ let to_string =
     Buffer.contents b
 ;;
 
+let ref_to_string ?encode = function
+| Iri iri -> to_string ?encode iri
+| Rel iri  -> to_string ?encode iri
+
 let normalize_path =
   let rec iter acc = function
     [] -> List.rev acc
@@ -274,10 +281,20 @@ let normalize_host s =
   let len = String.length s in
   if len > 0 then
     match String.get s 0 with
-      '[' -> s
-    | _ -> String.lowercase s
+      '[' -> String.uppercase s (* uppercase hexa *)
+    | _ -> String.lowercase s (* lowercase regname *)
   else
     s
+
+let normalize_port t =
+  match String.lowercase t.scheme, t.port with
+    "http", Some 80 -> { t with port = None }
+  | "https", Some 443 -> { t with port = None }
+  | "ftp", Some 21 -> { t with port = None }
+  | "sftp", Some 115 -> { t with port = None }
+  | "ssh", Some 22 -> { t with port = None }
+  | "smtp", Some 25 -> { t with port = None }
+  | _ -> t
 
 let normalize_case t =
   { t with
@@ -301,7 +318,9 @@ let normalize_nfkc t =
   }
 
 let normalize ?(nfkc=true) t =
-  let t = normalize_case ( remove_dot_segments t ) in
+  let t = remove_dot_segments t in
+  let t = normalize_case t in
+  let t = normalize_port t in
   if nfkc then normalize_nfkc t else t
 
 

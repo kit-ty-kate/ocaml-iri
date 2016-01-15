@@ -1,14 +1,21 @@
 open Iri
 
+let prerr_endline =
+  if Unix.isatty Unix.stderr then
+    fun str -> prerr_endline
+      (Printf.sprintf "\027[1;31m%s\027[0m" str)
+  else
+    prerr_endline
+
 let test_string str =
   try
-    let iri = Iri.normalize ~nfkc: true (of_string str) in
-    let str2 = Iri.to_string iri in
+    let iri = ref_of_string str in
+    let str2 = Iri.ref_to_string iri in
     print_endline
       (Printf.sprintf "%s -> %s%s" str str2
       (try
-         let iri = Iri.of_string str2 in
-         let str3 = Iri.to_string iri in
+         let iri = Iri.ref_of_string str2 in
+         let str3 = Iri.ref_to_string iri in
          if str2 = str3 then
            ""
          else
@@ -31,7 +38,8 @@ let test_string str =
 
 let test_mine () =
   let iris =
-    [ "http://ab.cde123fgh.ij/kl/mn/op.html" ;
+    [ "urn:example:mammal:monotreme:echidna";
+      "http://ab.cde123fgh.ij/kl/mn/op.html" ;
       "http:/kl/mn/op.html" ;
       "http:kl/mn/op.html" ;
       "http:?coucou=trois#id" ;
