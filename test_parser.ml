@@ -80,6 +80,8 @@ let test_mine () =
       "http:/kl/mn/op.html" ;
       "http:kl/mn/op.html" ;
       "http:?coucou=trois#id" ;
+      "http://a/b/c/d/?coucou=trois#id" ;
+      "http://a/b/c/d?coucou=trois#id" ;
       "ssh://foo@bar.net.com:8080/my/path/?arg=1%3D4%32&foo=15#id";
       "http://ab.גדהוזח.ij/kl/mn/op.html";
       "http://www.ほんとうにながいわけのわからないどめいんめいのらべるまだながくしないとたりない.w3.mag.keio.ac.jp/";
@@ -87,6 +89,54 @@ let test_mine () =
     ]
   in
   List.iter test_string iris
+
+let test_ref_resolve () =
+  let base = Iri.of_string "http://a/b/c/d;p?q" in
+  let test (str, expected) =
+    try
+      let expected = Iri.of_string expected in
+      let r = Iri.ref_of_string str in
+      let resolved = Iri.ensure_absolute_base ~normalize: false ~base r in
+      let ok = Iri.to_string resolved = Iri.to_string expected in
+      let msg =
+        Printf.sprintf "%s + %s => %s [%s]"
+          (Iri.to_string base)
+          (Iri.ref_to_string r)
+          (Iri.to_string resolved)
+          (if ok then "OK" else Printf.sprintf "KO, expected %s" (Iri.to_string expected))
+      in
+      if ok then print_endline msg else prerr_endline msg
+    with
+      Iri.Error e ->
+        let msg = Printf.sprintf "%s, %s: %s" expected str (Iri.string_of_error e) in
+        prerr_endline msg
+  in
+  List.iter test
+    [
+      "g:h"       ,  "g:h" ;
+      "g"         ,  "http://a/b/c/g" ;
+      "./g"       ,  "http://a/b/c/g" ;
+      "g/"        ,  "http://a/b/c/g/" ;
+      "/g"        ,  "http://a/g" ;
+      "//g"       ,  "http://g" ;
+      "?y"        ,  "http://a/b/c/d;p?y" ;
+      "g?y"       ,  "http://a/b/c/g?y" ;
+      "#s"        ,  "http://a/b/c/d;p?q#s" ;
+      "g#s"       ,  "http://a/b/c/g#s" ;
+      "g?y#s"     ,  "http://a/b/c/g?y#s" ;
+      ";x"        ,  "http://a/b/c/;x" ;
+      "g;x"       ,  "http://a/b/c/g;x" ;
+      "g;x?y#s"   ,  "http://a/b/c/g;x?y#s" ;
+      ""          ,  "http://a/b/c/d;p?q" ;
+      "."         ,  "http://a/b/c/" ;
+      "./"        ,  "http://a/b/c/" ;
+      ".."        ,  "http://a/b/" ;
+      "../"       ,  "http://a/b/" ;
+      "../g"      ,  "http://a/b/g" ;
+      "../.."     ,  "http://a/" ;
+      "../../"    ,  "http://a/" ;
+      "../../g"   ,  "http://a/g" ;
+    ]
 
 let test_file file =
   let ic = open_in file in
@@ -99,6 +149,6 @@ let () =
   if Array.length Sys.argv > 1 then
     Array.iteri (fun i f -> if i > 0 then test_file f) Sys.argv
   else
-    test_mine ()
+    (test_ref_resolve () ; test_mine ())
 
 

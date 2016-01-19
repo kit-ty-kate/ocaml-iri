@@ -450,12 +450,12 @@ let normalize_path =
   iter []
 ;;
 
+let path_remove_dot_segments = function
+  Absolute l -> Absolute (normalize_path l)
+| Relative l -> Relative (normalize_path l)
+
 let remove_dot_segments t =
-  let path =
-    match t.path with
-      Absolute l -> Absolute (normalize_path l)
-    | Relative l -> Relative (normalize_path l)
-  in
+  let path = path_remove_dot_segments t.path in
   { t with path }
 
 let normalize_host s =

@@ -299,6 +299,9 @@ let irelative_part pos lexbuf =
   | '?' | '#' -> (* ipath-empty *)
       Sedlexing.rollback lexbuf ;
       (pos, None, None, None, Relative [])
+  | eof ->
+      let pos = upd pos lexbuf in
+      (pos, None, None, None, Relative [])
   | _ ->
       let pos = upd pos lexbuf in
       error_pos pos

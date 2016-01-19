@@ -23,6 +23,10 @@
 (*                                                                               *)
 (*********************************************************************************)
 
+type error
+exception Error of error
+val string_of_error : error -> string
+
 module KV : Map.S with type key = string
 type query_kv = string KV.t
 
@@ -55,6 +59,11 @@ val compare : iri -> iri -> int
 val of_string : ?normalize:bool -> string -> iri
 val to_string : ?encode: bool -> iri -> string
 
+(** Read an IRI reference, i.e. a full IRI or a Relative one.
+  @param normalize tells whether to normalize to IRI or not.
+   Default is [false] (contrary of {!of_string}) as references will
+   usually be resolved from a base IRI.
+*)
 val ref_of_string : ?normalize:bool -> string -> iri_reference
 val ref_to_string : ?encode: bool -> iri_reference -> string
 
@@ -92,8 +101,11 @@ val query_get : iri -> string -> string
 val query_opt : iri -> string -> string option
 val query_set : iri -> string -> string -> iri
 
-
 val fragment : iri -> string option
 val with_fragment : iri -> string option -> iri
 
 val normalize: ?nfkc:bool -> iri -> iri
+
+(** @param normalize tells whether to apply normalization after resolution.
+     Default is [true]. *)
+val ensure_absolute_base : ?normalize: bool -> base: iri -> iri_reference -> iri
