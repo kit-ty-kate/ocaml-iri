@@ -24,7 +24,7 @@
 ####################################################################################
 
 # DO NOT FORGET TO UPDATE META FILE
-VERSION=0.1.P
+VERSION=0.1.0
 
 OCAMLFIND=ocamlfind
 PACKAGES=sedlex,uutf,uunf.string
@@ -110,13 +110,12 @@ archive:
 	git archive --prefix=iri-$(VERSION)/ HEAD | gzip > ../iri-gh-pages/xtmpl-$(VERSION).tar.gz
 
 #####
-GENERATED_FILES=iri_parser.ml iri_parser.mli
 clean:
-	$(RM) *.cm* *.o *.annot *.a $(GENERATED_FILES) dump.odoc
+	$(RM) *.cm* *.o *.annot *.a dump.odoc
 
 # headers :
 ###########
-HEADFILES=Makefile *.ml *.mli *.mly
+HEADFILES=Makefile *.ml *.mli
 .PHONY: headers noheaders
 headers:
 	headache -h header -c .headache_config $(HEADFILES)
@@ -130,6 +129,6 @@ noheaders:
 .PHONY: depend
 
 .depend depend:
-	$(OCAMLFIND) ocamldep *.ml *.mli *.mly  > .depend
+	$(OCAMLFIND) ocamldep *.ml *.mli  > .depend
 
 include .depend
