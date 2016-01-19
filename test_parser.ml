@@ -12,14 +12,26 @@ let test_string str =
     let iri = ref_of_string str in
     let str2 = Iri.ref_to_string iri in
     print_endline
-      (Printf.sprintf "%s -> %s%s" str str2
+      (Printf.sprintf "%s -> %s %s%s" str str2
+       (match iri with
+        | Rel _ -> ""
+        | Iri iri ->
+            match Iri.query iri with
+            |  None -> ""
+            | Some _ ->
+                let map = Iri.query_kv iri in
+                String.concat ", "
+                  ((List.map
+                   (fun (k, v) -> Printf.sprintf "%S->%S" k v))
+                  (Iri.KV.bindings map))
+       )
       (try
          let iri = Iri.ref_of_string str2 in
          let str3 = Iri.ref_to_string iri in
          if str2 = str3 then
            ""
          else
-           (Printf.sprintf " [not reparsed the same way]")
+           (Printf.sprintf " [not reparsed the same way str3=%s]" str3)
        with
        | e ->
            let msg =

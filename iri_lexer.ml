@@ -235,7 +235,7 @@ let ihier_part pos lexbuf =
       let (pos, u, h, p) = iauthority_with_user pos lexbuf in
       let (pos, path) = ipath_abempty pos lexbuf in
       (pos, u, Some h, p, path)
-  | '/', Plus(ipchar) -> ipath_absolute pos lexbuf      
+  | '/', Plus(ipchar) -> ipath_absolute pos lexbuf
   | Plus(ipchar) -> (* ipath_rootless *)
       let str = L.lexeme lexbuf in
       let pos = upd pos lexbuf in
@@ -266,7 +266,7 @@ let irelative_part pos lexbuf =
       let (pos, u, h, p) = iauthority_with_user pos lexbuf in
       let (pos, path) = ipath_abempty pos lexbuf in
       (pos, u, Some h, p, path)
-  | '/', Plus(ipchar) -> ipath_absolute pos lexbuf 
+  | '/', Plus(ipchar) -> ipath_absolute pos lexbuf
   | Plus(iunreserved|pct_encoded|sub_delims|'@') -> (* ipath-noscheme *)
       let str = L.lexeme lexbuf in
       let pos = upd pos lexbuf in
@@ -274,7 +274,7 @@ let irelative_part pos lexbuf =
       (pos, None, None, None, Relative path)
   | '?' | '#' -> (* ipath-empty *)
       Sedlexing.rollback lexbuf ;
-      (pos, None, None, None, Relative []) 
+      (pos, None, None, None, Relative [])
   | _ ->
       let pos = upd pos lexbuf in
       error_pos pos
@@ -286,14 +286,11 @@ let relative_iri pos lexbuf =
   let user = Iri_types.map_opt Iri_types.pct_decode user in
   let host = Iri_types.map_opt Iri_types.pct_decode host in
   let path = pct_decode_path path in
-  (* FIXME: decode query ? *)
   let fragment = Iri_types.map_opt Iri_types.pct_decode fragment in
   assert_eof pos lexbuf ;
-  let iri =
-    { scheme = "" ;
-      user ; host ; port ; path ;
-      query; fragment;
-    }
+  let iri = Iri_types.iri
+    ~scheme: ""  ?user ?host ?port ~path
+      ?query ?fragment ()
   in
   Rel iri
 
@@ -313,10 +310,9 @@ let iri_reference ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
       (* FIXME: decode query ? *)
       let fragment = Iri_types.map_opt Iri_types.pct_decode fragment in
       assert_eof pos lexbuf ;
-      let iri =
-        { scheme ; user ; host ; port ; path ;
-          query; fragment;
-        }
+      let iri = Iri_types.iri
+        ~scheme  ?user ?host ?port ~path
+          ?query ?fragment ()
       in
       Iri iri
   |  _ ->

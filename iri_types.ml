@@ -3,16 +3,28 @@ type path =
 | Absolute of string list
 | Relative of string list
 
+module KV = Map.Make(String)
+type query_kv = string KV.t
+
 type iri = {
     scheme : string ;
     user : string option ;
     host : string option ;
     port : int option ;
     path : path ;
-    query : string option ; (* not %-decoded as query is not parse to name/value pairs *)
+    query : string option ; (** not %-decoded as query is not parse to name/value pairs *)
     fragment : string option ;
+    mutable query_kv : query_kv  option ;
+      (** key value pairs from query string to avoid parsing it various times *)
   }
 type iri_reference = Iri of iri | Rel of iri
+
+let is_absolute t =
+  match t.fragment with
+    None -> t.scheme <> ""
+  | _ -> false
+
+let is_relative t = t.scheme = ""
 
 let utf8_nb_bytes_of_char c =
   let n = Char.code c in
@@ -155,6 +167,8 @@ let query_safe_chars =
   Array.iter (fun c -> a.(Char.code c) <- true) sub_delims ;
   a
 ;;
+let query_part_safe_char =
+  from_safe_chars ~f: is_ucschar query_safe_chars
 
 let fragment_safe_chars =
   let a = Array.copy safe_chars in
@@ -178,7 +192,7 @@ let pct_encode_utf8 dest codepoint =
     (fun c -> Printf.bprintf dest "%%%02X" (Char.code c))
     s
 
-let pct_encode =
+let pct_encode_b =
   let f is_safe_char b () _i = function
     `Malformed str -> Buffer.add_string b str
   | `Uchar codepoint ->
@@ -187,11 +201,14 @@ let pct_encode =
       else
         pct_encode_utf8 b codepoint
   in
-  fun is_safe_char s ->
-    let b = Buffer.create (String.length s) in
-    ignore(Uutf.String.fold_utf_8 (f is_safe_char b) () s);
-    Buffer.contents b
+  fun b is_safe_char s ->
+    Uutf.String.fold_utf_8 (f is_safe_char b) () s
 ;;
+
+let pct_encode is_safe_char s =
+  let b = Buffer.create (String.length s) in
+  pct_encode_b b is_safe_char s ;
+  Buffer.contents b
 
 let to_string =
   let string_of_path encode l =
@@ -226,7 +243,6 @@ let to_string =
            (if encode then pct_encode host_safe_char s else s)
     );
     (match iri.port with None -> () | Some n -> Buffer.add_string b (":"^(string_of_int n))) ;
-    (*if has_ihier then Buffer.add_string b "/" ;*)
     Buffer.add_string b
       (match iri.path with
         Absolute l -> "/"^(string_of_path encode l)
@@ -245,6 +261,147 @@ let to_string =
     );
     Buffer.contents b
 ;;
+
+let map_opt f = function None -> None | Some x -> Some (f x)
+
+let utf8_split =
+  let f split_char b_chars acc_words _i = function
+    `Malformed str -> Buffer.add_string b_chars str; acc_words
+  | `Uchar codepoint ->
+      if split_char codepoint then
+        begin
+          let w = Buffer.contents b_chars in
+          Buffer.reset b_chars ;
+          match w with
+            "" -> acc_words
+          | _ -> w :: acc_words
+        end
+      else
+        begin
+          Uutf.Buffer.add_utf_8 b_chars codepoint ;
+          acc_words
+        end
+  in
+  fun split_char str ->
+    let b = Buffer.create 128 in
+    let words = Uutf.String.fold_utf_8 (f split_char b) [] str in
+    match Buffer.contents b with
+      "" -> List.rev words
+    | w -> List.rev (w :: words)
+
+let encode_query_string_part = pct_encode query_part_safe_char
+
+let split_query_string =
+  let dec = pct_decode in
+  let cp_equal = Char.code '=' in
+  let cp_amp = Char.code '&' in
+  let is_equal cp = cp = cp_equal in
+  let is_amp cp = cp = cp_amp in
+  let add map str =
+    match utf8_split is_equal str with
+      [] | [_] -> KV.add (dec str) "" map
+    | [ k ; v ] -> KV.add (dec k) (dec v) map
+    | k :: vals -> KV.add (dec k) (dec (String.concat "=" vals)) map
+  in
+  fun str ->
+    let l = utf8_split is_amp str in
+    List.fold_left add KV.empty l
+
+let split_query_opt = function
+| None -> KV.empty
+| Some q -> split_query_string q
+
+let query_string_of_kv =
+  let f b max_i i (k, v) =
+     pct_encode_b b query_part_safe_char k ;
+     Buffer.add_char b '=' ;
+     pct_encode_b b query_part_safe_char v ;
+     if i <> max_i then Buffer.add_char b '&'
+  in
+  fun ?q pairs ->
+    let b = Buffer.create 128 in
+    (match q with
+       None | Some "" -> ()
+     | Some str ->
+         Buffer.add_string b str ;
+         Buffer.add_char b '&'
+    );
+    let pairs = KV.bindings pairs in
+    List.iteri (f b (List.length pairs - 1)) pairs ;
+    Buffer.contents b
+
+let query_string_of_kv_opt = map_opt query_string_of_kv
+
+let iri ?(scheme="") ?user ?host ?port ?(path=Absolute[]) ?query_kv ?query ?fragment () =
+  let (query, query_kv) =
+    match query, query_kv with
+    | None, None -> (None, None)
+    | Some _, None -> (query, None)
+    | None, Some kv -> (Some (query_string_of_kv kv), query_kv)
+    | Some q, Some kv ->
+        (* concat both and set kv pairs to none so that it will
+           be recreated from the concatenation *)
+        (Some (query_string_of_kv ~q kv), None)
+  in
+  { scheme ; user ; host ; port ; path ; query ; fragment ; query_kv }
+
+let scheme t = t.scheme
+let with_scheme t scheme = { t with scheme }
+
+let user t = t.user
+let with_user t user = { t with user }
+
+let host t = t.host
+let with_host t host = { t with host }
+
+let port t = t.port
+let with_port t port = { t with port }
+
+let path t = t.path
+let with_path t path = { t with path }
+
+let query t = t.query
+let with_query t query = { t with query }
+
+let query_kv t =
+  match t.query_kv with
+    Some map -> map
+  | None ->
+      let map = split_query_opt t.query in
+      t.query_kv <- Some map;
+      map
+
+let with_query_kv t map =
+  if KV.is_empty map then
+    { t with query = None ; query_kv = None }
+  else
+    { t with
+      query = Some (query_string_of_kv map) ;
+      query_kv = Some map ;
+    }
+
+let query_get t key =
+  match KV.find key (query_kv t) with
+  | exception Not_found -> ""
+  | str -> str
+
+let query_opt t key =
+  match KV.find key (query_kv t) with
+  | exception Not_found -> None
+  | str -> Some str
+
+let query_set t k v =
+  let map = query_kv t in
+  let map = KV.add k v map in
+  with_query_kv t map
+
+let fragment t = t.fragment
+let with_fragment t fragment = { t with fragment }
+
+let compare i1 i2 =
+  ignore(query_kv i1);
+  ignore(query_kv i2);
+  Pervasives.compare i1 i2
 
 let ref_to_string ?encode = function
 | Iri iri -> to_string ?encode iri
@@ -274,8 +431,6 @@ let remove_dot_segments t =
     | Relative l -> Relative (normalize_path l)
   in
   { t with path }
-
-let map_opt f = function None -> None | Some x -> Some (f x)
 
 let normalize_host s =
   let len = String.length s in
@@ -315,6 +470,7 @@ let normalize_nfkc t =
     user = map_opt f t.user ;
     query = map_opt f t.query ; (* beware: the query is not %-decoded *)
     fragment = map_opt f t.fragment ;
+    query_kv = None ;
   }
 
 let normalize ?(nfkc=true) t =
