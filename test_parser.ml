@@ -17,13 +17,13 @@ let test_string str =
         | Rel _ -> ""
         | Iri iri ->
             match Iri.query iri with
-            |  None -> ""
+            | None -> ""
             | Some _ ->
                 let map = Iri.query_kv iri in
                 String.concat ", "
                   ((List.map
-                   (fun (k, v) -> Printf.sprintf "%S->%S" k v))
-                  (Iri.KV.bindings map))
+                    (fun (k, v) -> Printf.sprintf "%S->%S" k v))
+                   (Iri.KV.bindings map))
        )
       (try
          let iri = Iri.ref_of_string str2 in
@@ -55,7 +55,7 @@ let test_mine () =
       "http:/kl/mn/op.html" ;
       "http:kl/mn/op.html" ;
       "http:?coucou=trois#id" ;
-      "ssh://foo@bar.net.com:8080/my/path/?arg=1,42&foo=15#id";
+      "ssh://foo@bar.net.com:8080/my/path/?arg=1%3D4%32&foo=15#id";
       "http://ab.גדהוזח.ij/kl/mn/op.html";
       "http://www.ほんとうにながいわけのわからないどめいんめいのらべるまだながくしないとたりない.w3.mag.keio.ac.jp/";
       "http://ほんとうにながいわけのわからないどめいんめいのらべるまだながくしないとたりない.ほんとうにながいわけのわからないどめいんめいのらべるまだながくしないとたりない.ほんとうにながいわけのわからないどめいんめいのらべるまだながくしないとたりない.w3.mag.keio.ac.jp/";

@@ -58,7 +58,7 @@ val host_safe_chars : bool array
 val host_safe_char : Uutf.uchar -> bool
 val path_safe_chars : bool array
 val path_safe_char : Uutf.uchar -> bool
-val query_safe_chars : bool array
+val query_part_safe_chars : bool array
 val query_part_safe_char : Uutf.uchar -> bool
 val fragment_safe_chars : bool array
 val fragment_safe_char : Uutf.uchar -> bool

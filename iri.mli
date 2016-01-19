@@ -2,7 +2,7 @@
 module KV : Map.S with type key = string
 type query_kv = string KV.t
 
-type path = Iri_types.path =
+type path =
 | Absolute of string list
 | Relative of string list
 
@@ -64,9 +64,9 @@ val with_query : iri -> string option -> iri
 *)
 val with_query_kv : iri -> query_kv -> iri
 
-val query_get : Iri_types.iri -> string -> string
-val query_opt : Iri_types.iri -> string -> string option
-val query_set : Iri_types.iri -> string -> string -> Iri_types.iri
+val query_get : iri -> string -> string
+val query_opt : iri -> string -> string option
+val query_set : iri -> string -> string -> iri
 
 
 val fragment : iri -> string option

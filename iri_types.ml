@@ -156,7 +156,7 @@ let path_safe_chars =
 let path_safe_char =
   from_safe_chars ~f: is_ucschar path_safe_chars
 
-let query_safe_chars =
+let query_part_safe_chars =
   let a = Array.copy safe_chars in
   a.(Char.code '~') <- true;
   a.(Char.code '_') <- true;
@@ -165,10 +165,12 @@ let query_safe_chars =
   a.(Char.code '?') <- true;
   a.(Char.code '/') <- true;
   Array.iter (fun c -> a.(Char.code c) <- true) sub_delims ;
+  a.(Char.code '=') <- false;
+  a.(Char.code '&') <- false;
   a
 ;;
 let query_part_safe_char =
-  from_safe_chars ~f: is_ucschar query_safe_chars
+  from_safe_chars ~f: is_ucschar query_part_safe_chars
 
 let fragment_safe_chars =
   let a = Array.copy safe_chars in
