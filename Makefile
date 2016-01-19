@@ -99,7 +99,7 @@ docstog: dump.odoc
 install: byte opt
 	$(OCAMLFIND) install iri META LICENSE \
 		$(LIB) $(LIB_CMXS) $(LIB_OFILES) $(LIB_CMXFILES) $(LIB_A) \
-		$(LIB_BYTE) $(LIB_CMIFILES) $(LIB_CMXFILES:.cmx=.mli)
+		$(LIB_BYTE) $(LIB_CMIFILES) iri.mli
 
 uninstall:
 	ocamlfind remove iri
