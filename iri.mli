@@ -34,8 +34,8 @@ type path =
 | Absolute of string list
 | Relative of string list
 
-type iri
-type iri_reference = Iri of iri | Rel of iri
+type t
+type reference = Iri of t | Rel of t
 
 (** @param query is %-encoded
      @param query_kv is %-decoded *)
@@ -46,24 +46,24 @@ val iri :
   ?port:int ->
   ?path:path ->
   ?query_kv:query_kv ->
-  ?query:string -> ?fragment:string -> unit -> iri
+  ?query:string -> ?fragment:string -> unit -> t
 
-module Set : Set.S with type elt = iri
-module Map : Map.S with type key = iri
+module Set : Set.S with type elt = t
+module Map : Map.S with type key = t
 
-val is_absolute : iri -> bool
-val is_relative : iri -> bool
+val is_absolute : t -> bool
+val is_relative : t -> bool
 
-val compare : iri -> iri -> int
-val equal : iri -> iri -> bool
+val compare : t -> t -> int
+val equal : t -> t -> bool
 
 (** Read an IRI from the given string.
   @param normalize tells whether to normalize to IRI or not.
    Default is [true].
    @decode tells whether to %-decode strings or not; default is [true].*)
 val of_string : ?pctdecode: bool ->
-  ?pos: Lexing.position -> ?normalize:bool -> string -> iri
-val to_string : ?pctencode: bool -> iri -> string
+  ?pos: Lexing.position -> ?normalize:bool -> string -> t
+val to_string : ?pctencode: bool -> t -> string
 
 (** Read an IRI reference, i.e. a full IRI or a Relative one.
   @param normalize tells whether to normalize to IRI or not.
@@ -72,56 +72,56 @@ val to_string : ?pctencode: bool -> iri -> string
    @decode tells whether to %-decode strings or not; default is [true].
 *)
 val ref_of_string : ?pctdecode: bool ->
-  ?pos: Lexing.position -> ?normalize:bool -> string -> iri_reference
-val ref_to_string : ?pctencode: bool -> iri_reference -> string
+  ?pos: Lexing.position -> ?normalize:bool -> string -> reference
+val ref_to_string : ?pctencode: bool -> reference -> string
 
-val scheme : iri -> string
-val with_scheme : iri -> string -> iri
+val scheme : t -> string
+val with_scheme : t -> string -> t
 
-val user : iri -> string option
-val with_user : iri -> string option -> iri
+val user : t -> string option
+val with_user : t -> string option -> t
 
-val host : iri -> string option
-val with_host : iri -> string option -> iri
+val host : t -> string option
+val with_host : t -> string option -> t
 
-val port : iri -> int option
-val with_port : iri -> int option -> iri
+val port : t -> int option
+val with_port : t -> int option -> t
 
-val path : iri -> path
-val with_path : iri -> path -> iri
+val path : t -> path
+val with_path : t -> path -> t
 
 (** @param encode indicate whether the path elements must be encoded.
   Default is [false]. *)
-val path_string : ?pctencode: bool -> iri -> string
+val path_string : ?pctencode: bool -> t -> string
 
 (** Append the given (not %-encoded) string list to the path of the
      given iri and return a new iri with this path. *)
-val append_path : iri -> string list -> iri
+val append_path : t -> string list -> t
 
 (** Query string is not %-decoded as it is not parsed to name/value pairs *)
-val query : iri -> string option
+val query : t -> string option
 
 (** Key/value pairs from the query string. strings are %-decoded. *)
-val query_kv : iri -> query_kv
+val query_kv : t -> query_kv
 
 (** Return a new iri with the given optional query string.
   This string must already be %-encoded. *)
-val with_query : iri -> string option -> iri
+val with_query : t -> string option -> t
 
 (** Return a new iri with the given list of key/value pairs.
   The givn string must be %-decoded.
 *)
-val with_query_kv : iri -> query_kv -> iri
+val with_query_kv : t -> query_kv -> t
 
-val query_get : iri -> string -> string
-val query_opt : iri -> string -> string option
-val query_set : iri -> string -> string -> iri
+val query_get : t -> string -> string
+val query_opt : t -> string -> string option
+val query_set : t -> string -> string -> t
 
-val fragment : iri -> string option
-val with_fragment : iri -> string option -> iri
+val fragment : t -> string option
+val with_fragment : t -> string option -> t
 
-val normalize: ?nfkc:bool -> iri -> iri
+val normalize: ?nfkc:bool -> t -> t
 
 (** @param normalize tells whether to apply normalization after resolution.
      Default is [true]. *)
-val resolve : ?normalize: bool -> base: iri -> iri_reference -> iri
+val resolve : ?normalize: bool -> base: t -> reference -> t

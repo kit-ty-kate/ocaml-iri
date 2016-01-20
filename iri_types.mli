@@ -30,7 +30,7 @@ module KV :
     val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
   end
 type query_kv = string KV.t
-type iri = {
+type t = {
   scheme : string;
   user : string option;
   host : string option;
@@ -40,9 +40,9 @@ type iri = {
   fragment : string option;
   mutable query_kv : query_kv option;
 }
-type iri_reference = Iri of iri | Rel of iri
-val is_absolute : iri -> bool
-val is_relative : iri -> bool
+type reference = Iri of t | Rel of t
+val is_absolute : t -> bool
+val is_relative : t -> bool
 val utf8_nb_bytes_of_char : char -> int
 val is_ucschar : int -> bool
 val is_iprivate : int -> bool
@@ -66,7 +66,8 @@ val pct_encode_utf8 : Buffer.t -> Uutf.uchar -> unit
 val pct_encode_b : Buffer.t -> (Uutf.uchar -> bool) -> string -> unit
 val pct_encode : (Uutf.uchar -> bool) -> string -> string
 val pct_encode_query : string -> string
-val to_string : ?pctencode:bool -> iri -> string
+val path_string : ?pctencode:bool -> t -> string
+val to_string : ?pctencode:bool -> t -> string
 val map_opt : ('a -> 'b) -> 'a option -> 'b option
 val utf8_split : (Uutf.uchar -> bool) -> string -> string list
 val encode_query_string_part : string -> string
@@ -80,36 +81,35 @@ val iri :
   ?host:string ->
   ?port:int ->
   ?path:path ->
-  ?query_kv:string KV.t -> ?query:string -> ?fragment:string -> unit -> iri
-val scheme : iri -> string
-val with_scheme : iri -> string -> iri
-val user : iri -> string option
-val with_user : iri -> string option -> iri
-val host : iri -> string option
-val with_host : iri -> string option -> iri
-val port : iri -> int option
-val with_port : iri -> int option -> iri
-val path : iri -> path
-val path_string : ?pctencode: bool -> iri -> string
-val with_path : iri -> path -> iri
-val append_path : iri -> string list -> iri
-val query : iri -> string option
-val with_query : iri -> string option -> iri
-val query_kv : iri -> query_kv
-val with_query_kv : iri -> string KV.t -> iri
-val query_get : iri -> KV.key -> string
-val query_opt : iri -> KV.key -> string option
-val query_set : iri -> KV.key -> string -> iri
-val fragment : iri -> string option
-val with_fragment : iri -> string option -> iri
-val compare : iri -> iri -> int
-val equal : iri -> iri -> bool
-val ref_to_string : ?pctencode:bool -> iri_reference -> string
+  ?query_kv:string KV.t -> ?query:string -> ?fragment:string -> unit -> t
+val scheme : t -> string
+val with_scheme : t -> string -> t
+val user : t -> string option
+val with_user : t -> string option -> t
+val host : t -> string option
+val with_host : t -> string option -> t
+val port : t -> int option
+val with_port : t -> int option -> t
+val path : t -> path
+val with_path : t -> path -> t
+val append_path : t -> string list -> t
+val query : t -> string option
+val with_query : t -> string option -> t
+val query_kv : t -> query_kv
+val with_query_kv : t -> string KV.t -> t
+val query_get : t -> KV.key -> string
+val query_opt : t -> KV.key -> string option
+val query_set : t -> KV.key -> string -> t
+val fragment : t -> string option
+val with_fragment : t -> string option -> t
+val compare : t -> t -> int
+val equal : t -> t -> bool
+val ref_to_string : ?pctencode:bool -> reference -> string
 val normalize_path : string list -> string list
 val path_remove_dot_segments : path -> path
-val remove_dot_segments : iri -> iri
+val remove_dot_segments : t -> t
 val normalize_host : string -> string
-val normalize_port : iri -> iri
-val normalize_case : iri -> iri
-val normalize_nfkc : iri -> iri
-val normalize : ?nfkc:bool -> iri -> iri
+val normalize_port : t -> t
+val normalize_case : t -> t
+val normalize_nfkc : t -> t
+val normalize : ?nfkc:bool -> t -> t

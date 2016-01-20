@@ -30,7 +30,7 @@ type path =
 module KV = Map.Make(String)
 type query_kv = string KV.t
 
-type iri = {
+type t = {
     scheme : string ;
     user : string option ;
     host : string option ;
@@ -41,7 +41,7 @@ type iri = {
     mutable query_kv : query_kv  option ;
       (** key value pairs from query string to avoid parsing it various times *)
   }
-type iri_reference = Iri of iri | Rel of iri
+type reference = Iri of t | Rel of t
 
 let is_absolute t =
   match t.fragment with

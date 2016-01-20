@@ -29,6 +29,7 @@ let string_of_error = Iri_lexer.string_of_error
 
 include Iri_types
 
+type iri = t
 module Ord = struct type t = iri let compare = Iri_types.compare end
 module Set = Set.Make(Ord)
 module Map = Map.Make(Ord)

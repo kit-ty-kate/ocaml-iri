@@ -35,5 +35,5 @@ val string_of_loc : loc -> string
 val string_of_error : loc * string -> string
 val loc : Lexing.position -> Lexing.position -> loc
 val loc_of_pos : Lexing.position -> int -> loc
-val iri : ?pctdecode: bool -> ?pos:Lexing.position -> Sedlexing.lexbuf -> Iri_types.iri
-val iri_reference : ?pctdecode: bool -> ?pos:Lexing.position -> Sedlexing.lexbuf -> Iri_types.iri_reference
+val iri : ?pctdecode: bool -> ?pos:Lexing.position -> Sedlexing.lexbuf -> Iri_types.t
+val iri_reference : ?pctdecode: bool -> ?pos:Lexing.position -> Sedlexing.lexbuf -> Iri_types.reference
