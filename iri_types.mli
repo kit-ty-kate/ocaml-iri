@@ -89,7 +89,9 @@ val with_host : iri -> string option -> iri
 val port : iri -> int option
 val with_port : iri -> int option -> iri
 val path : iri -> path
+val path_string : ?encode: bool -> iri -> string
 val with_path : iri -> path -> iri
+val append_path : iri -> string list -> iri
 val query : iri -> string option
 val with_query : iri -> string option -> iri
 val query_kv : iri -> query_kv

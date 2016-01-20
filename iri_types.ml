@@ -236,7 +236,8 @@ let pct_encode is_safe_char s =
   pct_encode_b b is_safe_char s ;
   Buffer.contents b
 
-let to_string =
+
+let path_string =
   let string_of_path encode l =
     let l =
       if encode then
@@ -246,6 +247,12 @@ let to_string =
     in
     String.concat "/" l
   in
+  fun ?(encode=false) t ->
+    match t.path with
+      Absolute l -> "/"^(string_of_path encode l)
+    | Relative l -> string_of_path encode l
+
+let to_string =
   fun ?(encode=true) iri  ->
     let has_ihier = iri.host <> None in
     let b = Buffer.create 256 in
@@ -269,10 +276,9 @@ let to_string =
            (if encode then pct_encode host_safe_char s else s)
     );
     (match iri.port with None -> () | Some n -> Buffer.add_string b (":"^(string_of_int n))) ;
-    Buffer.add_string b
-      (match iri.path with
-        Absolute l -> "/"^(string_of_path encode l)
-      | Relative l -> string_of_path encode l);
+
+    Buffer.add_string b (path_string ~encode iri);
+
     (match iri.query with
        None -> ()
      | Some s ->
@@ -385,6 +391,12 @@ let with_port t port = { t with port }
 
 let path t = t.path
 let with_path t path = { t with path }
+let append_path t strings =
+  let path = match t.path with
+    | Absolute l -> Absolute (l @ strings)
+    | Relative l -> Relative (l @ strings)
+  in
+  with_path t path
 
 let query t = t.query
 let with_query t query = { t with query }

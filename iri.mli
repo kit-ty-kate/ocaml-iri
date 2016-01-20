@@ -82,6 +82,14 @@ val with_port : iri -> int option -> iri
 val path : iri -> path
 val with_path : iri -> path -> iri
 
+(** @param encode indicate whether the path elements must be encoded.
+  Default is [false]. *)
+val path_string : ?encode: bool -> iri -> string
+
+(** Append the given (not %-encoded) string list to the path of the
+     given iri and return a new iri with this path. *)
+val append_path : iri -> string list -> iri
+
 (** Query string is not %-decoded as it is not parsed to name/value pairs *)
 val query : iri -> string option
 
