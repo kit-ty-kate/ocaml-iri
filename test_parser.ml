@@ -96,7 +96,7 @@ let test_ref_resolve () =
     try
       let expected = Iri.of_string expected in
       let r = Iri.ref_of_string str in
-      let resolved = Iri.ensure_absolute_base ~normalize: false ~base r in
+      let resolved = Iri.resolve ~normalize: true ~base r in
       let ok = Iri.to_string resolved = Iri.to_string expected in
       let msg =
         Printf.sprintf "%s + %s => %s [%s]"
@@ -136,6 +136,25 @@ let test_ref_resolve () =
       "../.."     ,  "http://a/" ;
       "../../"    ,  "http://a/" ;
       "../../g"   ,  "http://a/g" ;
+      "../../../g",  "http://a/g" ;
+      "../../../../g",  "http://a/g" ;
+       "/./g"    , "http://a/g" ;
+      "/../g"    , "http://a/g" ;
+      "g."       , "http://a/b/c/g." ;
+      ".g"       , "http://a/b/c/.g" ;
+      "g.."      , "http://a/b/c/g.." ;
+      "..g"      , "http://a/b/c/..g" ;
+       "./../g"    ,  "http://a/b/g" ;
+      "./g/."     ,  "http://a/b/c/g/" ;
+      "g/./h"     ,  "http://a/b/c/g/h" ;
+      "g/../h"    ,  "http://a/b/c/h" ;
+      "g;x=1/./y" ,  "http://a/b/c/g;x=1/y" ;
+      "g;x=1/../y",  "http://a/b/c/y" ;
+      "g?y/./x"   ,  "http://a/b/c/g?y/./x" ;
+      "g?y/../x"  ,  "http://a/b/c/g?y/../x" ;
+      "g#s/./x"   ,  "http://a/b/c/g#s/./x" ;
+      "g#s/../x"  ,  "http://a/b/c/g#s/../x" ;
+      "http:g"    ,  "http:g" ;
     ]
 
 let test_file file =

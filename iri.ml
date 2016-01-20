@@ -51,7 +51,7 @@ let ref_of_string ?normalize str =
   let lexbuf = Sedlexing.Utf8.from_string str in
   ref_of_lexbuf ?normalize lexbuf
 
-let ensure_absolute_base ?(normalize=true) ~base iri =
+let resolve ?(normalize=true) ~base iri =
   let resolved =
     match iri with
       Iri iri -> iri
@@ -62,15 +62,21 @@ let ensure_absolute_base ?(normalize=true) ~base iri =
           base
         else
           match String.get str 0 with
-          | '#' -> with_fragment base (Some (String.sub str 1 (len - 1)))
+          | '#' -> with_fragment base (fragment iri)
           | '?' ->
-              let base = with_query base None in
               let base = with_fragment base None in
-              let s = to_string base ^ str in
-              of_string s
+              with_query base (query iri)
           | _ ->
               let base = with_query base None in
               let base = with_fragment base None in
+              let base =
+                match host iri with
+                  None -> base
+                | Some host ->
+                    let base = with_host base (Some host) in
+                    let base = with_port base (port iri) in
+                    with_user base (user iri)
+              in
               let path =
                 match path iri with
                   Absolute p -> Absolute p

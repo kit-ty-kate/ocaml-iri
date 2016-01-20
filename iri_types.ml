@@ -434,20 +434,20 @@ let ref_to_string ?encode = function
 | Rel iri  -> to_string ?encode iri
 
 let normalize_path =
-  let rec iter acc = function
+  let rec iter acc abs = function
     [] -> List.rev acc
-  | "." :: q -> iter acc q
+  | "." :: q -> iter acc abs (""::q)
   | ".." :: q ->
       begin
         match acc with
-          [] -> iter acc q
-        | _ :: acc -> iter acc q
+          [] -> iter acc abs q
+        | _ :: acc -> iter acc abs (""::q)
       end
   | [""] -> List.rev (""::acc)
-  | "" :: q -> iter acc q
-  | h :: q -> iter (h :: acc) q
+  | "" :: q -> iter acc abs q
+  | h :: q -> iter (h :: acc) abs q
   in
-  iter []
+  iter [] true
 ;;
 
 let path_remove_dot_segments = function

@@ -108,4 +108,4 @@ val normalize: ?nfkc:bool -> iri -> iri
 
 (** @param normalize tells whether to apply normalization after resolution.
      Default is [true]. *)
-val ensure_absolute_base : ?normalize: bool -> base: iri -> iri_reference -> iri
+val resolve : ?normalize: bool -> base: iri -> iri_reference -> iri
