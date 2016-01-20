@@ -59,17 +59,21 @@ val equal : iri -> iri -> bool
 
 (** Read an IRI from the given string.
   @param normalize tells whether to normalize to IRI or not.
-   Default is [true].*)
-val of_string : ?normalize:bool -> string -> iri
-val to_string : ?encode: bool -> iri -> string
+   Default is [true].
+   @decode tells whether to %-decode strings or not; default is [true].*)
+val of_string : ?pctdecode: bool ->
+  ?pos: Lexing.position -> ?normalize:bool -> string -> iri
+val to_string : ?pctencode: bool -> iri -> string
 
 (** Read an IRI reference, i.e. a full IRI or a Relative one.
   @param normalize tells whether to normalize to IRI or not.
    Default is [false] (contrary of {!of_string}) as references will
    usually be resolved from a base IRI.
+   @decode tells whether to %-decode strings or not; default is [true].
 *)
-val ref_of_string : ?normalize:bool -> string -> iri_reference
-val ref_to_string : ?encode: bool -> iri_reference -> string
+val ref_of_string : ?pctdecode: bool ->
+  ?pos: Lexing.position -> ?normalize:bool -> string -> iri_reference
+val ref_to_string : ?pctencode: bool -> iri_reference -> string
 
 val scheme : iri -> string
 val with_scheme : iri -> string -> iri
@@ -88,7 +92,7 @@ val with_path : iri -> path -> iri
 
 (** @param encode indicate whether the path elements must be encoded.
   Default is [false]. *)
-val path_string : ?encode: bool -> iri -> string
+val path_string : ?pctencode: bool -> iri -> string
 
 (** Append the given (not %-encoded) string list to the path of the
      given iri and return a new iri with this path. *)

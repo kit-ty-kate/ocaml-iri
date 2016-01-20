@@ -236,6 +236,22 @@ let pct_encode is_safe_char s =
   pct_encode_b b is_safe_char s ;
   Buffer.contents b
 
+let pct_encode_query =
+  let safe_chars =
+    let a = Array.copy safe_chars in
+    a.(Char.code '~') <- true;
+    a.(Char.code '_') <- true;
+    a.(Char.code ':') <- true;
+    a.(Char.code '@') <- true;
+    a.(Char.code '?') <- true;
+    a.(Char.code '/') <- true;
+    Array.iter (fun c -> a.(Char.code c) <- true) sub_delims ;
+    a
+  in
+  let is_safe_char =
+    from_safe_chars ~f: is_ucschar safe_chars
+  in
+  fun str -> pct_encode is_safe_char str
 
 let path_string =
   let string_of_path encode l =
@@ -247,13 +263,13 @@ let path_string =
     in
     String.concat "/" l
   in
-  fun ?(encode=false) t ->
+  fun ?(pctencode=false) t ->
     match t.path with
-      Absolute l -> "/"^(string_of_path encode l)
-    | Relative l -> string_of_path encode l
+      Absolute l -> "/"^(string_of_path pctencode l)
+    | Relative l -> string_of_path pctencode l
 
 let to_string =
-  fun ?(encode=true) iri  ->
+  fun ?(pctencode=true) iri  ->
     let has_ihier = iri.host <> None in
     let b = Buffer.create 256 in
     if iri.scheme <> "" then
@@ -266,18 +282,18 @@ let to_string =
        None -> ()
      | Some u ->
          Buffer.add_string b
-           (if encode then pct_encode user_safe_char u else u);
+           (if pctencode then pct_encode user_safe_char u else u);
          Buffer.add_char b '@'
     );
     (match iri.host with
        None -> ()
      | Some s ->
          Buffer.add_string b
-           (if encode then pct_encode host_safe_char s else s)
+           (if pctencode then pct_encode host_safe_char s else s)
     );
     (match iri.port with None -> () | Some n -> Buffer.add_string b (":"^(string_of_int n))) ;
 
-    Buffer.add_string b (path_string ~encode iri);
+    Buffer.add_string b (path_string ~pctencode iri);
 
     (match iri.query with
        None -> ()
@@ -289,7 +305,7 @@ let to_string =
        None -> ()
      | Some s ->
          Buffer.add_char b '#' ;
-         Buffer.add_string b (if encode then pct_encode fragment_safe_char s else s)
+         Buffer.add_string b (if pctencode then pct_encode fragment_safe_char s else s)
     );
     Buffer.contents b
 ;;
@@ -443,9 +459,9 @@ let compare i1 i2 =
 
 let equal i1 i2 = compare i1 i2 = 0
 
-let ref_to_string ?encode = function
-| Iri iri -> to_string ?encode iri
-| Rel iri  -> to_string ?encode iri
+let ref_to_string ?pctencode = function
+| Iri iri -> to_string ?pctencode iri
+| Rel iri  -> to_string ?pctencode iri
 
 let normalize_path =
   let rec iter acc abs = function

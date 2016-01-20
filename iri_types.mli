@@ -65,7 +65,8 @@ val fragment_safe_char : Uutf.uchar -> bool
 val pct_encode_utf8 : Buffer.t -> Uutf.uchar -> unit
 val pct_encode_b : Buffer.t -> (Uutf.uchar -> bool) -> string -> unit
 val pct_encode : (Uutf.uchar -> bool) -> string -> string
-val to_string : ?encode:bool -> iri -> string
+val pct_encode_query : string -> string
+val to_string : ?pctencode:bool -> iri -> string
 val map_opt : ('a -> 'b) -> 'a option -> 'b option
 val utf8_split : (Uutf.uchar -> bool) -> string -> string list
 val encode_query_string_part : string -> string
@@ -89,7 +90,7 @@ val with_host : iri -> string option -> iri
 val port : iri -> int option
 val with_port : iri -> int option -> iri
 val path : iri -> path
-val path_string : ?encode: bool -> iri -> string
+val path_string : ?pctencode: bool -> iri -> string
 val with_path : iri -> path -> iri
 val append_path : iri -> string list -> iri
 val query : iri -> string option
@@ -103,7 +104,7 @@ val fragment : iri -> string option
 val with_fragment : iri -> string option -> iri
 val compare : iri -> iri -> int
 val equal : iri -> iri -> bool
-val ref_to_string : ?encode:bool -> iri_reference -> string
+val ref_to_string : ?pctencode:bool -> iri_reference -> string
 val normalize_path : string list -> string list
 val path_remove_dot_segments : path -> path
 val remove_dot_segments : iri -> iri

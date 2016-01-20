@@ -33,12 +33,12 @@ module Ord = struct type t = iri let compare = Iri_types.compare end
 module Set = Set.Make(Ord)
 module Map = Map.Make(Ord)
 
-let of_lexbuf ?(normalize=true) lexbuf =
-  let iri = Iri_lexer.iri lexbuf in
+let of_lexbuf ?pctdecode ?pos ?(normalize=true) lexbuf =
+  let iri = Iri_lexer.iri ?pctdecode ?pos lexbuf in
   if normalize then Iri_types.normalize iri else iri
 
-let ref_of_lexbuf ?(normalize=false) lexbuf =
-  let iriref = Iri_lexer.iri_reference lexbuf in
+let ref_of_lexbuf ?pctdecode ?pos ?(normalize=false) lexbuf =
+  let iriref = Iri_lexer.iri_reference ?pctdecode ?pos lexbuf in
   if normalize then
     match iriref with
       Iri iri -> Iri (Iri_types.normalize iri)
@@ -46,13 +46,13 @@ let ref_of_lexbuf ?(normalize=false) lexbuf =
   else
     iriref
 
-let of_string ?normalize str =
+let of_string ?pctdecode ?pos ?normalize str =
   let lexbuf = Sedlexing.Utf8.from_string str in
-  of_lexbuf ?normalize lexbuf
+  of_lexbuf ?pctdecode ?pos ?normalize lexbuf
 
-let ref_of_string ?normalize str =
+let ref_of_string ?pctdecode ?pos ?normalize str =
   let lexbuf = Sedlexing.Utf8.from_string str in
-  ref_of_lexbuf ?normalize lexbuf
+  ref_of_lexbuf ?pctdecode ?pos ?normalize lexbuf
 
 let resolve ?(normalize=true) ~base iri =
   let resolved =

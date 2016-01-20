@@ -308,14 +308,18 @@ let irelative_part pos lexbuf =
       let pos = upd pos lexbuf in
       error_pos pos
 
-let relative_iri pos lexbuf =
+let relative_iri pctdecode pos lexbuf =
   let (pos, user, host, port, path) = irelative_part pos lexbuf in
   let (pos, query) = query_opt pos lexbuf in
   let (pos, fragment) = fragment_opt pos lexbuf in
-  let user = Iri_types.map_opt Iri_types.pct_decode user in
-  let host = Iri_types.map_opt Iri_types.pct_decode host in
-  let path = pct_decode_path path in
-  let fragment = Iri_types.map_opt Iri_types.pct_decode fragment in
+  let user = if pctdecode then Iri_types.map_opt Iri_types.pct_decode user else user in
+  let host = if pctdecode then Iri_types.map_opt Iri_types.pct_decode host else host in
+  let path = if pctdecode then pct_decode_path path else path in
+  let query =
+    (* since query will be %-decoded, let's %-encode it *)
+    if pctdecode then Iri_types.map_opt Iri_types.pct_encode_query query else query
+  in
+  let fragment = if pctdecode then Iri_types.map_opt Iri_types.pct_decode fragment else fragment in
   assert_eof pos lexbuf ;
   let iri = Iri_types.iri
     ~scheme: ""  ?user ?host ?port ~path
@@ -323,21 +327,25 @@ let relative_iri pos lexbuf =
   in
   Rel iri
 
-let iri_reference ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
+let iri_reference ?(pctdecode=true) ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
   match%sedlex lexbuf with
     alpha, Star(alpha|digit|Chars"+-."), ':' ->
       let str = L.lexeme lexbuf in
       let len = String.length str in
-      let scheme = Iri_types.pct_decode (String.sub str 0 (len - 1)) in
+      let scheme = String.sub str 0 (len - 1) in
       let pos = upd pos lexbuf in
       let (pos, user, host, port, path) = ihier_part pos lexbuf in
       let (pos, query) = query_opt pos lexbuf in
       let (pos, fragment) = fragment_opt pos lexbuf in
-      let user = Iri_types.map_opt Iri_types.pct_decode user in
-      let host = Iri_types.map_opt Iri_types.pct_decode host in
-      let path = pct_decode_path path in
-      (* FIXME: decode query ? *)
-      let fragment = Iri_types.map_opt Iri_types.pct_decode fragment in
+      let scheme = if pctdecode then Iri_types.pct_decode scheme else scheme in
+      let user = if pctdecode then Iri_types.map_opt Iri_types.pct_decode user else user in
+      let host = if pctdecode then Iri_types.map_opt Iri_types.pct_decode host else host in
+      let path = if pctdecode then pct_decode_path path else path in
+      let query =
+        (* since query will be %-decoded, let's %-encode it *)
+        if pctdecode then Iri_types.map_opt Iri_types.pct_encode_query query else query
+      in
+      let fragment = if pctdecode then Iri_types.map_opt Iri_types.pct_decode fragment else fragment in
       assert_eof pos lexbuf ;
       let iri = Iri_types.iri
         ~scheme  ?user ?host ?port ~path
@@ -346,10 +354,10 @@ let iri_reference ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
       Iri iri
   |  _ ->
       Sedlexing.rollback lexbuf ;
-      relative_iri pos lexbuf
+      relative_iri pctdecode pos lexbuf
 
-let iri ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
-  match iri_reference ~pos lexbuf with
+let iri ?pctdecode ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
+  match iri_reference ?pctdecode ~pos lexbuf with
     Iri iri -> iri
   | _ -> error_pos ~msg: "Not an absolute IRI" pos
 
