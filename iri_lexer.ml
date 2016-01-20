@@ -50,10 +50,10 @@ let vchar = [%sedlex.regexp? 0x21..0x7E]
 
 (* tools to handle locations in lexbuf *)
 
-type pos = { line: int ; bol : int; char: int ; file : string option }
-let pos ?file ~line ~bol ~char () = { line ; bol ; char ; file }
+let pos ?(file="") ~line ~bol ~char () =
+  Lexing.{ pos_lnum = line ; pos_bol = bol ; pos_cnum = char ; pos_fname = file }
 
-type loc = { loc_start: pos; loc_stop: pos }
+type loc = { loc_start: Lexing.position; loc_stop: Lexing.position }
 type 'a with_loc = 'a * loc option
 
 type error = loc * string
@@ -61,21 +61,22 @@ exception Error of error
 let error ?(msg="Parse error") loc = raise (Error (loc, msg))
 
 let string_of_loc loc =
+  let open Lexing in
   let start = loc.loc_start in
   let stop = loc.loc_stop in
-  let line = start.line in
-  let char = start.char - start.bol in
+  let line = start.pos_lnum in
+  let char = start.pos_cnum - start.pos_bol in
   let len =
-    if start.file = stop.file then
-      stop.char - start.char
+    if start.pos_fname = stop.pos_fname then
+      stop.pos_cnum - start.pos_cnum
     else
       1
   in
-  let file = start.file in
+  let file = start.pos_fname in
   Printf.sprintf "%sline %d, character%s %d%s"
     (match file with
-     | None -> ""
-     | Some s -> Printf.sprintf "File %S, " s)
+     | "" -> ""
+     | _ -> Printf.sprintf "File %S, " file)
     line
     (if len > 1 then "s" else "")
     char
@@ -94,23 +95,24 @@ let string_of_error (loc, str) =
 let loc loc_start loc_stop = { loc_start ; loc_stop }
 let loc_of_pos pos len =
   { loc_start = pos ;
-    loc_stop = { pos with char = pos.char + len } ;
+    loc_stop = Lexing.{ pos with pos_cnum = pos.pos_cnum + len } ;
   }
 let error_pos ?msg pos = error ?msg (loc_of_pos pos 1)
 
 let nl_code = Char.code '\n'
 
 let update_pos pos str =
+  let open Lexing in
   let f pos i = function
   | `Malformed msg -> error ~msg (loc_of_pos pos 1)
   | `Uchar c when c = nl_code ->
-      let bol = pos.char in
+      let bol = pos.pos_cnum in
       { pos with
-        line = pos.line + 1;
-        bol ;
-        char = pos.char + 1 ;
+        pos_lnum = pos.pos_lnum + 1;
+        pos_bol = bol ;
+        pos_cnum = pos.pos_cnum + 1 ;
       }
-  | _ -> { pos with char = pos.char + 1}
+  | _ -> { pos with pos_cnum = pos.pos_cnum + 1}
   in
   Uutf.String.fold_utf_8 f pos str
 

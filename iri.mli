@@ -48,10 +48,14 @@ val iri :
   ?query_kv:query_kv ->
   ?query:string -> ?fragment:string -> unit -> iri
 
+module Set : Set.S with type elt = iri
+module Map : Map.S with type key = iri
+
 val is_absolute : iri -> bool
 val is_relative : iri -> bool
 
 val compare : iri -> iri -> int
+val equal : iri -> iri -> bool
 
 (** Read an IRI from the given string.
   @param normalize tells whether to normalize to IRI or not.

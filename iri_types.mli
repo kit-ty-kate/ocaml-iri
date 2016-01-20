@@ -102,6 +102,7 @@ val query_set : iri -> KV.key -> string -> iri
 val fragment : iri -> string option
 val with_fragment : iri -> string option -> iri
 val compare : iri -> iri -> int
+val equal : iri -> iri -> bool
 val ref_to_string : ?encode:bool -> iri_reference -> string
 val normalize_path : string list -> string list
 val path_remove_dot_segments : path -> path

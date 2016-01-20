@@ -441,6 +441,8 @@ let compare i1 i2 =
   ignore(query_kv i2);
   Pervasives.compare i1 i2
 
+let equal i1 i2 = compare i1 i2 = 0
+
 let ref_to_string ?encode = function
 | Iri iri -> to_string ?encode iri
 | Rel iri  -> to_string ?encode iri
