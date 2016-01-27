@@ -383,13 +383,13 @@ and rel acc iri pos lexbuf =
       let p2 = String.index_from str (p1+1) '"' in
       let str = String.sub str (p1+1) (p2 - p1 - 1) in
       let pos = upd pos lexbuf in
-      link ((iri, str) :: acc) pos lexbuf
+      link ((str, iri) :: acc) pos lexbuf
   | Star(Compl(',')),Star(wsp),Opt(',') ->
       let pos = upd pos lexbuf in
-      link ((iri, "")::acc) pos lexbuf
+      link (("", iri)::acc) pos lexbuf
   | _ ->
       let pos = upd pos lexbuf in
-      link ((iri, "")::acc) pos lexbuf
+      link (("", iri)::acc) pos lexbuf
 
 
 let http_link ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =

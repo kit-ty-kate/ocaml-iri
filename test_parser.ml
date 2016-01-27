@@ -163,7 +163,8 @@ let test_http_link () =
     let b = Buffer.create 256 in
     Printf.bprintf b "Link: %s\n" str ;
     List.iter
-      (fun (iri, s) -> Printf.bprintf b "=> %s rel=%S\n" (Iri.to_string iri) s)
+      (fun (s, iri) ->
+         Printf.bprintf b "=> %s rel=%S\n" (Iri.to_string iri) s)
       l;
     print_endline (Buffer.contents b)
   in
