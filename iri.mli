@@ -125,3 +125,5 @@ val normalize: ?nfkc:bool -> t -> t
 (** @param normalize tells whether to apply normalization after resolution.
      Default is [true]. *)
 val resolve : ?normalize: bool -> base: t -> reference -> t
+
+val parse_http_link : string -> (t * string) list

@@ -105,4 +105,6 @@ let resolve ?(normalize=true) ~base iri =
   in
   if normalize then Iri_types.normalize resolved else resolved
 
-
+let parse_http_link str =
+  let lexbuf = Sedlexing.Utf8.from_string str in
+  Iri_lexer.http_link lexbuf

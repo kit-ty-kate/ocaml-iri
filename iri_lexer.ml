@@ -361,3 +361,37 @@ let iri ?pctdecode ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
     Iri iri -> iri
   | _ -> error_pos ~msg: "Not an absolute IRI" pos
 
+let rec link acc pos lexbuf =
+  match%sedlex lexbuf with
+  | Star(wsp),'<',Plus(Compl('>')), '>', Star(wsp), ';', Star(wsp) ->
+      let str = L.lexeme lexbuf in
+      let p1 = String.index str '<' in
+      let p2 = String.index_from str p1 '>' in
+      let pos2 = Lexing.{ pos with pos_cnum = pos.pos_cnum + p1 + 1 } in
+      let lb = Sedlexing.Utf8.from_string (String.sub str (p1 + 1) (p2 - p1 - 1)) in
+      (* FIXME: pct-decode iri ? *)
+      let iri = iri ~pos: pos2 lb in
+      let pos = upd pos lexbuf in
+      rel acc iri pos lexbuf
+  | _ -> List.rev acc
+
+and rel acc iri pos lexbuf =
+  match%sedlex lexbuf with
+  | "rel=\"",Plus(alpha),'"',Star(wsp),Opt(',') ->
+      let str = L.lexeme lexbuf in
+      let p1 = String.index str '"' in
+      let p2 = String.index_from str (p1+1) '"' in
+      let str = String.sub str (p1+1) (p2 - p1 - 1) in
+      let pos = upd pos lexbuf in
+      link ((iri, str) :: acc) pos lexbuf
+  | Star(Compl(',')),Star(wsp),Opt(',') ->
+      let pos = upd pos lexbuf in
+      link ((iri, "")::acc) pos lexbuf
+  | _ ->
+      let pos = upd pos lexbuf in
+      link ((iri, "")::acc) pos lexbuf
+
+
+let http_link ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
+  link [] pos lexbuf
+

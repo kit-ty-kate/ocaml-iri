@@ -157,6 +157,22 @@ let test_ref_resolve () =
       "http:g"    ,  "http:g" ;
     ]
 
+let test_http_link () =
+  let f str =
+    let l = Iri.parse_http_link str in
+    let b = Buffer.create 256 in
+    Printf.bprintf b "Link: %s\n" str ;
+    List.iter
+      (fun (iri, s) -> Printf.bprintf b "=> %s rel=%S\n" (Iri.to_string iri) s)
+      l;
+    print_endline (Buffer.contents b)
+  in
+  List.iter f
+    [ {|<http://www.w3.org/ns/ldp#BasicContainer>; rel="type", <http://www.w3.org/ns/ldp#Resource>; rel="type" |} ;
+      {|  <http://www.w3.org/ns/ldp#IndirectContainer>; rel="type",  <http://www.w3.org/ns/ldp#Resource>; rel="type"|} ;
+    ]
+
+
 let test_file file =
   let ic = open_in file in
   (try while true do test_string (input_line ic) done
@@ -168,6 +184,6 @@ let () =
   if Array.length Sys.argv > 1 then
     Array.iteri (fun i f -> if i > 0 then test_file f) Sys.argv
   else
-    (test_ref_resolve () ; test_mine ())
+    (test_ref_resolve () ; test_mine () ; test_http_link ())
 
 
