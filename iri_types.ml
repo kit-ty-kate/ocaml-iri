@@ -535,4 +535,71 @@ let normalize ?(nfkc=true) t =
   let t = normalize_port t in
   if nfkc then normalize_nfkc t else t
 
+let to_uri =
+  let user_safe_char = from_safe_chars user_safe_chars in
+  let host_safe_char = from_safe_chars host_safe_chars in
+  let fragment_safe_char = from_safe_chars fragment_safe_chars in
+  let query_part_safe_char = from_safe_chars query_part_safe_chars in
+  let path_safe_char = from_safe_chars path_safe_chars in
+  let path_string =
+    let string_of_path l =
+      let l = List.map (pct_encode path_safe_char) l in
+      String.concat "/" l
+    in
+    fun t ->
+      match t.path with
+        Absolute l -> "/"^(string_of_path l)
+      | Relative l -> string_of_path l
+  in
+  let print_query_string =
+    let f b max_i i (k, v) =
+      pct_encode_b b query_part_safe_char k ;
+      Buffer.add_char b '=' ;
+      pct_encode_b b query_part_safe_char v ;
+      if i <> max_i then Buffer.add_char b '&'
+    in
+    fun b t ->
+      match KV.bindings (query_kv t) with
+      | [] -> ()
+      | pairs ->
+          Buffer.add_char b '?';
+          List.iteri (f b (List.length pairs - 1)) pairs
+  in
+  fun iri  ->
+    let has_ihier = iri.host <> None in
+    let b = Buffer.create 256 in
+    if iri.scheme <> "" then
+      (
+       Buffer.add_string b iri.scheme ;
+       Buffer.add_string b ":"
+      );
+    if has_ihier then Buffer.add_string b "//";
+    (match iri.user with
+       None -> ()
+     | Some u ->
+         pct_encode_b b user_safe_char u ;
+         Buffer.add_char b '@'
+    );
+    (match iri.host with
+       None -> ()
+     | Some s -> pct_encode_b b host_safe_char s
+    );
+    (match iri.port with
+     | None -> ()
+     | Some n -> Buffer.add_string b (":"^(string_of_int n))
+    ) ;
+
+    Buffer.add_string b (path_string iri);
+
+    print_query_string b iri ;
+
+    (match iri.fragment with
+       None -> ()
+     | Some s ->
+         Buffer.add_char b '#' ;
+         pct_encode_b b fragment_safe_char s
+    );
+    Buffer.contents b
+;;
+
 

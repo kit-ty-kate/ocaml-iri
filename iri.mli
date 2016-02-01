@@ -127,3 +127,6 @@ val normalize: ?nfkc:bool -> t -> t
 val resolve : ?normalize: bool -> base: t -> reference -> t
 
 val parse_http_link : string -> (string * t) list
+
+(** Return a correctly pct-encoded URI as a string, from the given IRI. *)
+val to_uri : t -> string

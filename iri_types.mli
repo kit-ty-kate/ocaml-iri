@@ -113,3 +113,4 @@ val normalize_port : t -> t
 val normalize_case : t -> t
 val normalize_nfkc : t -> t
 val normalize : ?nfkc:bool -> t -> t
+val to_uri : t -> string
