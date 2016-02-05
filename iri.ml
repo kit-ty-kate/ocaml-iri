@@ -23,11 +23,19 @@
 (*                                                                               *)
 (*********************************************************************************)
 
-type error = Iri_lexer.error
-exception Error = Iri_lexer.Error
-let string_of_error = Iri_lexer.string_of_error
 
 include Iri_types
+
+let string_of_error = function
+| Parse_error (str,e) ->
+    let msg =
+      match e with
+        Iri_lexer.Error e -> Iri_lexer.string_of_error e
+      | _ -> Printexc.to_string e
+    in
+    Printf.sprintf "Parse error in %s\n%s" str msg
+
+let parse_error str e = raise (Error (Parse_error (str, e)))
 
 type iri = t
 module Ord = struct type t = iri let compare = Iri_types.compare end
@@ -49,11 +57,13 @@ let ref_of_lexbuf ?pctdecode ?pos ?(normalize=false) lexbuf =
 
 let of_string ?pctdecode ?pos ?normalize str =
   let lexbuf = Sedlexing.Utf8.from_string str in
-  of_lexbuf ?pctdecode ?pos ?normalize lexbuf
+  try of_lexbuf ?pctdecode ?pos ?normalize lexbuf
+  with (Iri_lexer.Error _ ) as e -> parse_error str e
 
 let ref_of_string ?pctdecode ?pos ?normalize str =
   let lexbuf = Sedlexing.Utf8.from_string str in
-  ref_of_lexbuf ?pctdecode ?pos ?normalize lexbuf
+  try ref_of_lexbuf ?pctdecode ?pos ?normalize lexbuf
+  with (Iri_lexer.Error _ ) as e -> parse_error str e
 
 let resolve ?(normalize=true) ~base iri =
   let resolved =

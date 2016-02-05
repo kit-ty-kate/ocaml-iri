@@ -41,6 +41,12 @@ type t = {
   mutable query_kv : query_kv option;
 }
 type reference = Iri of t | Rel of t
+
+type error =
+| Parse_error of string * exn
+
+exception Error of error
+
 val is_absolute : t -> bool
 val is_relative : t -> bool
 val utf8_nb_bytes_of_char : char -> int

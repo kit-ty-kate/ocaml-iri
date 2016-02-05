@@ -43,6 +43,11 @@ type t = {
   }
 type reference = Iri of t | Rel of t
 
+type error =
+| Parse_error of string * exn
+
+exception Error of error
+
 let is_absolute t =
   match t.fragment with
     None -> t.scheme <> ""
