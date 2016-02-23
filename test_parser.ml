@@ -75,7 +75,8 @@ let test_string str =
 
 let test_mine () =
   let iris =
-    [ "urn:example:mammal:monotreme:echidna";
+    [ "" ;
+      "urn:example:mammal:monotreme:echidna";
       "http://ab.cde123fgh.ij/kl/mn/op.html" ;
       "http:/kl/mn/op.html" ;
       "http:kl/mn/op.html" ;
