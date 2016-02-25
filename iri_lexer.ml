@@ -325,9 +325,9 @@ let relative_iri pctdecode pos lexbuf =
     ~scheme: ""  ?user ?host ?port ~path
       ?query ?fragment ()
   in
-  Rel iri
+  iri
 
-let iri_reference ?(pctdecode=true) ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
+let iri ?(pctdecode=true) ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
   match%sedlex lexbuf with
     alpha, Star(alpha|digit|Chars"+-."), ':' ->
       let str = L.lexeme lexbuf in
@@ -351,15 +351,10 @@ let iri_reference ?(pctdecode=true) ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexb
         ~scheme  ?user ?host ?port ~path
           ?query ?fragment ()
       in
-      Iri iri
+      iri
   |  _ ->
       Sedlexing.rollback lexbuf ;
       relative_iri pctdecode pos lexbuf
-
-let iri ?pctdecode ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
-  match iri_reference ?pctdecode ~pos lexbuf with
-    Iri iri -> iri
-  | _ -> error_pos ~msg: "Not an absolute IRI" pos
 
 let rec link acc pos lexbuf =
   match%sedlex lexbuf with

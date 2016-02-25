@@ -36,6 +36,5 @@ val string_of_error : loc * string -> string
 val loc : Lexing.position -> Lexing.position -> loc
 val loc_of_pos : Lexing.position -> int -> loc
 val iri : ?pctdecode: bool -> ?pos:Lexing.position -> Sedlexing.lexbuf -> Iri_types.t
-val iri_reference : ?pctdecode: bool -> ?pos:Lexing.position -> Sedlexing.lexbuf -> Iri_types.reference
 val http_link : ?pos:Lexing.position -> Sedlexing.lexbuf -> (string * Iri_types.t) list
 

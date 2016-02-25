@@ -41,7 +41,6 @@ type t = {
     mutable query_kv : query_kv  option ;
       (** key value pairs from query string to avoid parsing it various times *)
   }
-type reference = Iri of t | Rel of t
 
 type error =
 | Parse_error of string * exn
@@ -463,10 +462,6 @@ let compare i1 i2 =
   Pervasives.compare i1 i2
 
 let equal i1 i2 = compare i1 i2 = 0
-
-let ref_to_string ?pctencode = function
-| Iri iri -> to_string ?pctencode iri
-| Rel iri  -> to_string ?pctencode iri
 
 let normalize_path =
   let rec iter acc abs = function

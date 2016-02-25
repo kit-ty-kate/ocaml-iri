@@ -35,7 +35,6 @@ type path =
 | Relative of string list
 
 type t
-type reference = Iri of t | Rel of t
 
 (** @param query is %-encoded
      @param query_kv is %-decoded *)
@@ -51,7 +50,10 @@ val iri :
 module Set : Set.S with type elt = t
 module Map : Map.S with type key = t
 
+(** [true] if fragment is None and scheme is not empty. *)
 val is_absolute : t -> bool
+
+(** [true] is scheme is empty. *)
 val is_relative : t -> bool
 
 val compare : t -> t -> int
@@ -59,21 +61,11 @@ val equal : t -> t -> bool
 
 (** Read an IRI from the given string.
   @param normalize tells whether to normalize to IRI or not.
-   Default is [true].
+   Default is [false] when IRI is relative (has no scheme) or [true] overwise.
    @decode tells whether to %-decode strings or not; default is [true].*)
 val of_string : ?pctdecode: bool ->
   ?pos: Lexing.position -> ?normalize:bool -> string -> t
 val to_string : ?pctencode: bool -> t -> string
-
-(** Read an IRI reference, i.e. a full IRI or a Relative one.
-  @param normalize tells whether to normalize to IRI or not.
-   Default is [false] (contrary of {!of_string}) as references will
-   usually be resolved from a base IRI.
-   @decode tells whether to %-decode strings or not; default is [true].
-*)
-val ref_of_string : ?pctdecode: bool ->
-  ?pos: Lexing.position -> ?normalize:bool -> string -> reference
-val ref_to_string : ?pctencode: bool -> reference -> string
 
 val scheme : t -> string
 val with_scheme : t -> string -> t
@@ -124,7 +116,7 @@ val normalize: ?nfkc:bool -> t -> t
 
 (** @param normalize tells whether to apply normalization after resolution.
      Default is [true]. *)
-val resolve : ?normalize: bool -> base: t -> reference -> t
+val resolve : ?normalize: bool -> base: t -> t -> t
 
 val parse_http_link : string -> (string * t) list
 

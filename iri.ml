@@ -42,35 +42,30 @@ module Ord = struct type t = iri let compare = Iri_types.compare end
 module Set = Set.Make(Ord)
 module Map = Map.Make(Ord)
 
-let of_lexbuf ?pctdecode ?pos ?(normalize=true) lexbuf =
+let of_lexbuf ?pctdecode ?pos ?normalize lexbuf =
   let iri = Iri_lexer.iri ?pctdecode ?pos lexbuf in
-  if normalize then Iri_types.normalize iri else iri
-
-let ref_of_lexbuf ?pctdecode ?pos ?(normalize=false) lexbuf =
-  let iriref = Iri_lexer.iri_reference ?pctdecode ?pos lexbuf in
-  if normalize then
-    match iriref with
-      Iri iri -> Iri (Iri_types.normalize iri)
-    | Rel iri -> Rel (Iri_types.normalize iri)
-  else
-    iriref
+  match normalize, is_relative iri with
+    Some true, _
+  | None, false -> Iri_types.normalize iri
+  | _ -> iri
 
 let of_string ?pctdecode ?pos ?normalize str =
   let lexbuf = Sedlexing.Utf8.from_string str in
   try of_lexbuf ?pctdecode ?pos ?normalize lexbuf
   with (Iri_lexer.Error _ ) as e -> parse_error str e
 
-let ref_of_string ?pctdecode ?pos ?normalize str =
-  let lexbuf = Sedlexing.Utf8.from_string str in
-  try ref_of_lexbuf ?pctdecode ?pos ?normalize lexbuf
-  with (Iri_lexer.Error _ ) as e -> parse_error str e
-
 let resolve ?(normalize=true) ~base iri =
   let resolved =
-    match iri with
-      Iri iri -> iri
-    | Rel iri ->
+    match is_relative iri with
+      false -> iri
+    | true ->
         let str = to_string iri in
+        (*prerr_endline
+          (Printf.sprintf "%s=\nscheme=%s\nhost=%s\npath=%s"
+           str (scheme iri)
+             (match host iri with None -> "" | Some s -> s)
+             (path_string iri)
+          );*)
         let len = String.length str in
         if len <= 0 then
           base

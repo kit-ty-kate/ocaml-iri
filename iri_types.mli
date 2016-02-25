@@ -40,7 +40,6 @@ type t = {
   fragment : string option;
   mutable query_kv : query_kv option;
 }
-type reference = Iri of t | Rel of t
 
 type error =
 | Parse_error of string * exn
@@ -49,6 +48,7 @@ exception Error of error
 
 val is_absolute : t -> bool
 val is_relative : t -> bool
+
 val utf8_nb_bytes_of_char : char -> int
 val is_ucschar : int -> bool
 val is_iprivate : int -> bool
@@ -110,7 +110,6 @@ val fragment : t -> string option
 val with_fragment : t -> string option -> t
 val compare : t -> t -> int
 val equal : t -> t -> bool
-val ref_to_string : ?pctencode:bool -> reference -> string
 val normalize_path : string list -> string list
 val path_remove_dot_segments : path -> path
 val remove_dot_segments : t -> t

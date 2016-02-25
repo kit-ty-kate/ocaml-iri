@@ -34,25 +34,23 @@ let prerr_endline =
 
 let test_string str =
   try
-    let iri = ref_of_string str in
-    let str2 = Iri.ref_to_string iri in
+    let iri = Iri.of_string str in
+    let str2 = Iri.to_string iri in
     print_endline
       (Printf.sprintf "%s -> %s %s%s" str str2
-       (match iri with
-        | Rel _ -> ""
-        | Iri iri ->
-            match Iri.query iri with
-            | None -> ""
-            | Some _ ->
-                let map = Iri.query_kv iri in
-                String.concat ", "
-                  ((List.map
-                    (fun (k, v) -> Printf.sprintf "%S->%S" k v))
-                   (Iri.KV.bindings map))
+       (
+        match Iri.query iri with
+        | None -> ""
+        | Some _ ->
+            let map = Iri.query_kv iri in
+            String.concat ", "
+              ((List.map
+                (fun (k, v) -> Printf.sprintf "%S->%S" k v))
+               (Iri.KV.bindings map))
        )
       (try
-         let iri = Iri.ref_of_string str2 in
-         let str3 = Iri.ref_to_string iri in
+         let iri = Iri.of_string str2 in
+         let str3 = Iri.to_string iri in
          if str2 = str3 then
            ""
          else
@@ -96,13 +94,13 @@ let test_ref_resolve () =
   let test (str, expected) =
     try
       let expected = Iri.of_string expected in
-      let r = Iri.ref_of_string str in
+      let r = Iri.of_string str in
       let resolved = Iri.resolve ~normalize: true ~base r in
       let ok = Iri.to_string resolved = Iri.to_string expected in
       let msg =
         Printf.sprintf "%s + %s => %s [%s]"
           (Iri.to_string base)
-          (Iri.ref_to_string r)
+          (Iri.to_string r)
           (Iri.to_string resolved)
           (if ok then "OK" else Printf.sprintf "KO, expected %s" (Iri.to_string expected))
       in
