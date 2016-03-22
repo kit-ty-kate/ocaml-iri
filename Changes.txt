@@ -1,0 +1,4 @@
+0.2.0:
+- fixes
+- better error messages
+- additions and changes in API
