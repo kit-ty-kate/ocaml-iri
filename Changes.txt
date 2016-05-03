@@ -1,3 +1,6 @@
+0.3.0:
+- upgrade to OCaml 4.03.0
+
 0.2.0:
 - fixes
 - better error messages
