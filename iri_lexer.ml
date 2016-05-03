@@ -28,13 +28,13 @@
 let digit = [%sedlex.regexp? '0'..'9']
 let alpha = [%sedlex.regexp? 'a'..'z'|'A'..'Z']
 let bit = [%sedlex.regexp? '0' | '1']
-let char = [%sedlex.regexp? 0x01..0x7F]
+let char = [%sedlex.regexp? 0x01 .. 0x7F]
   (* any 7-bit US-ASCII character, excluding NUL *)
 
 let cr = [%sedlex.regexp? 0x0D] (* carriage return *)
 let lf = [%sedlex.regexp? 0x0A] (* line feed *)
 let crlf = [%sedlex.regexp? cr,lf] (* Internet standard newline *)
-let ctl = [%sedlex.regexp? 0x00..0x1F | 0x7F] (* controls *)
+let ctl = [%sedlex.regexp? 0x00 .. 0x1F | 0x7F] (* controls *)
 let dquote = [%sedlex.regexp? '"'] (* Double Quote, \x22 *)
 let hexdig = [%sedlex.regexp? digit | 'A'..'F' | 'a'..'f']
    (* we tolerate lowercase *)
@@ -44,8 +44,8 @@ let wsp = [%sedlex.regexp? sp | htab] (* white space *)
 let lwsp = [%sedlex.regexp? Star((wsp | crlf), wsp)]
    (* linear white space (past newline) *)
 
-let octect = [%sedlex.regexp? 0x00..0xFF] (* 8 bits of data *)
-let vchar = [%sedlex.regexp? 0x21..0x7E]
+let octect = [%sedlex.regexp? 0x00 .. 0xFF] (* 8 bits of data *)
+let vchar = [%sedlex.regexp? 0x21 .. 0x7E]
   (* visible (printing) characters *)
 
 (* tools to handle locations in lexbuf *)
@@ -121,15 +121,15 @@ let upd pos lexbuf = update_pos pos (Sedlexing.Utf8.lexeme lexbuf)
 (* rules from IRI RFC *)
 
 let ucschar = [%sedlex.regexp?
-    0xA0..0xD7FF | 0xF900..0xFDCF | 0xFDF0..0xFFEF
-  | 0x10000..0x1FFFD | 0x20000..0x2FFFD | 0x30000..0x3FFFD
-  | 0x40000..0x4FFFD | 0x50000..0x5FFFD | 0x60000..0x6FFFD
-  | 0x70000..0x7FFFD | 0x80000..0x8FFFD | 0x90000..0x9FFFD
-  | 0xA0000..0xAFFFD | 0xB0000..0xBFFFD | 0xC0000..0xCFFFD
-  | 0xD0000..0xDFFFD | 0xE1000..0xEFFFD ]
+    0xA0 .. 0xD7FF | 0xF900 .. 0xFDCF | 0xFDF0 .. 0xFFEF
+  | 0x10000 .. 0x1FFFD | 0x20000 .. 0x2FFFD | 0x30000 .. 0x3FFFD
+  | 0x40000 .. 0x4FFFD | 0x50000 .. 0x5FFFD | 0x60000 .. 0x6FFFD
+  | 0x70000 .. 0x7FFFD | 0x80000 .. 0x8FFFD | 0x90000 .. 0x9FFFD
+  | 0xA0000 .. 0xAFFFD | 0xB0000 .. 0xBFFFD | 0xC0000 .. 0xCFFFD
+  | 0xD0000 .. 0xDFFFD | 0xE1000 .. 0xEFFFD ]
 
 let iprivate = [%sedlex.regexp?
-    0xE000..0xF8FF | 0xF0000..0xFFFFD | 0x100000..0x10FFFD]
+    0xE000 .. 0xF8FF | 0xF0000 .. 0xFFFFD | 0x100000 .. 0x10FFFD]
 
 let iunreserved = [%sedlex.regexp? alpha | digit | Chars "-._~" | ucschar]
 let pct_encoded = [%sedlex.regexp? '%', hexdig, hexdig ]
