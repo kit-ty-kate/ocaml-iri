@@ -111,5 +111,9 @@ let resolve ?(normalize=true) ~base iri =
   if normalize then Iri_types.normalize resolved else resolved
 
 let parse_http_link str =
-  let lexbuf = Sedlexing.Utf8.from_string str in
+  let lexbuf =
+    try Sedlexing.Utf8.from_string str
+    with Sedlexing.MalFormed as e ->
+      raise (Error (Parse_error ("Malformed character in http link: "^str, e)))
+  in
   Iri_lexer.http_link lexbuf

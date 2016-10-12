@@ -116,7 +116,12 @@ let update_pos pos str =
   in
   Uutf.String.fold_utf_8 f pos str
 
-let upd pos lexbuf = update_pos pos (Sedlexing.Utf8.lexeme lexbuf)
+let lexeme pos lexbuf =
+  try Sedlexing.Utf8.lexeme lexbuf
+  with Sedlexing.MalFormed ->
+    error_pos ~msg:"Malformed character in lexeme" pos
+
+let upd pos lexbuf = update_pos pos (lexeme pos lexbuf)
 
 (* rules from IRI RFC *)
 
@@ -166,12 +171,11 @@ let port = [%sedlex.regexp? Star(digit)]
 let ipchar = [%sedlex.regexp? iunreserved|pct_encoded|sub_delims|':'|'@']
 
 open Iri_types
-module L = Sedlexing.Utf8
 
 let fragment_opt pos lexbuf =
   match%sedlex lexbuf with
     '#', Star(ipchar|'/'|'?') ->
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let len = String.length str in
       let pos = upd pos lexbuf in
       (pos, Some (String.sub str 1 (len-1)))
@@ -184,7 +188,7 @@ let fragment_opt pos lexbuf =
 let query_opt pos lexbuf =
   match%sedlex lexbuf with
     '?', Star(ipchar|iprivate|'/'|'?') ->
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let len = String.length str in
       let pos = upd pos lexbuf in
       (pos, Some (String.sub str 1 (len-1)))
@@ -197,7 +201,7 @@ let query_opt pos lexbuf =
 let rec isegment_list acc pos lexbuf =
   match%sedlex lexbuf with
     '/', Star(ipchar) ->
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let len = String.length str in
       let pos = upd pos lexbuf in
       isegment_list ((String.sub str 1 (len-1)) :: acc) pos lexbuf
@@ -213,7 +217,7 @@ let iauthority pos lexbuf =
   match%sedlex lexbuf with
     ihost, ':', port ->
       begin
-        let str = L.lexeme lexbuf in
+        let str = lexeme pos lexbuf in
         let len = String.length str in
         let p = String.rindex str ':' in
         let port =
@@ -226,7 +230,7 @@ let iauthority pos lexbuf =
         (pos, host, port)
       end
   | ihost ->
-      let host = L.lexeme lexbuf in
+      let host = lexeme pos lexbuf in
       let pos = upd pos lexbuf in
       (pos, host, None)
   | _ ->
@@ -235,7 +239,7 @@ let iauthority pos lexbuf =
 let iauthority_with_user pos lexbuf =
   match%sedlex lexbuf with
   | iuserinfo, '@' ->
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let len = String.length str in
       let user = String.sub str 0 (len - 1) in
       let pos = upd pos lexbuf in
@@ -247,7 +251,7 @@ let iauthority_with_user pos lexbuf =
       (pos, None, h, p)
 
 let ipath_absolute pos lexbuf =
-  let str = L.lexeme lexbuf in
+  let str = lexeme pos lexbuf in
   let len = String.length str in
   let str = String.sub str 1 (len - 1) in
   let pos = upd pos lexbuf in
@@ -263,7 +267,7 @@ let ihier_part pos lexbuf =
       (pos, u, Some h, p, path)
   | '/', Plus(ipchar) -> ipath_absolute pos lexbuf
   | Plus(ipchar) -> (* ipath_rootless *)
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let pos = upd pos lexbuf in
       let (pos, path) = isegment_list [str] pos lexbuf in
       (pos, None, None, None, Relative path)
@@ -294,7 +298,7 @@ let irelative_part pos lexbuf =
       (pos, u, Some h, p, path)
   | '/', Plus(ipchar) -> ipath_absolute pos lexbuf
   | Plus(iunreserved|pct_encoded|sub_delims|'@') -> (* ipath-noscheme *)
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let pos = upd pos lexbuf in
       let (pos, path) = isegment_list [str] pos lexbuf in
       (pos, None, None, None, Relative path)
@@ -330,7 +334,7 @@ let relative_iri pctdecode pos lexbuf =
 let iri ?(pctdecode=true) ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
   match%sedlex lexbuf with
     alpha, Star(alpha|digit|Chars"+-."), ':' ->
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let len = String.length str in
       let scheme = String.sub str 0 (len - 1) in
       let pos = upd pos lexbuf in
@@ -359,11 +363,15 @@ let iri ?(pctdecode=true) ?(pos=pos ~line: 1 ~bol: 0 ~char: 1 ()) lexbuf =
 let rec link acc pos lexbuf =
   match%sedlex lexbuf with
   | Star(wsp),'<',Plus(Compl('>')), '>', Star(wsp), ';', Star(wsp) ->
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let p1 = String.index str '<' in
       let p2 = String.index_from str p1 '>' in
       let pos2 = Lexing.{ pos with pos_cnum = pos.pos_cnum + p1 + 1 } in
-      let lb = Sedlexing.Utf8.from_string (String.sub str (p1 + 1) (p2 - p1 - 1)) in
+      let lb =
+        try Sedlexing.Utf8.from_string (String.sub str (p1 + 1) (p2 - p1 - 1))
+        with Sedlexing.MalFormed ->
+          error_pos ~msg: "Malformed character in link" pos
+      in
       (* FIXME: pct-decode iri ? *)
       let iri = iri ~pos: pos2 lb in
       let pos = upd pos lexbuf in
@@ -373,7 +381,7 @@ let rec link acc pos lexbuf =
 and rel acc iri pos lexbuf =
   match%sedlex lexbuf with
   | "rel=\"",Plus(alpha),'"',Star(wsp),Opt(',') ->
-      let str = L.lexeme lexbuf in
+      let str = lexeme pos lexbuf in
       let p1 = String.index str '"' in
       let p2 = String.index_from str (p1+1) '"' in
       let str = String.sub str (p1+1) (p2 - p1 - 1) in

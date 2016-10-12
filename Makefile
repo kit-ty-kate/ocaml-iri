@@ -28,7 +28,7 @@ VERSION=0.3.0
 
 OCAMLFIND=ocamlfind
 PACKAGES=sedlex,uutf,uunf.string
-COMPFLAGS=-annot -safe-string -g
+COMPFLAGS=-annot -bin-annot -safe-string -g
 OCAMLPP=
 
 RM=rm -f
@@ -99,7 +99,7 @@ docstog: dump.odoc
 install: byte opt
 	$(OCAMLFIND) install iri META LICENSE \
 		$(LIB) $(LIB_CMXS) $(LIB_OFILES) $(LIB_CMXFILES) $(LIB_A) \
-		$(LIB_BYTE) $(LIB_CMIFILES) iri.mli
+		$(LIB_BYTE) $(LIB_CMIFILES) iri.mli iri.cmti
 
 uninstall:
 	ocamlfind remove iri
