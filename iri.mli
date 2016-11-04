@@ -25,6 +25,7 @@
 
 type error
 exception Error of error
+
 val string_of_error : error -> string
 
 module KV : Map.S with type key = string

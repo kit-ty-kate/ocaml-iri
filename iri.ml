@@ -24,7 +24,10 @@
 (*********************************************************************************)
 
 
-include Iri_types
+type error = Iri_types.error
+exception Error = Iri_types.Error
+
+open Iri_types
 
 let string_of_error = function
 | Parse_error (str,e) ->
@@ -117,3 +120,37 @@ let parse_http_link str =
       raise (Error (Parse_error ("Malformed character in http link: "^str, e)))
   in
   Iri_lexer.http_link lexbuf
+
+let to_uri = Iri_types.to_uri
+let normalize = Iri_types.normalize
+let with_fragment = Iri_types.with_fragment
+let fragment = Iri_types.fragment
+let query_set = Iri_types.query_set
+let query_opt = Iri_types.query_opt
+let query_get = Iri_types.query_get
+let with_query_kv = Iri_types.with_query_kv
+let with_query = Iri_types.with_query
+let query_kv = Iri_types.query_kv
+let query = Iri_types.query
+let append_path = Iri_types.append_path
+let path_string = Iri_types.path_string
+let with_path = Iri_types.with_path
+let path = Iri_types.path
+let with_port = Iri_types.with_port
+let port = Iri_types.port
+let with_host = Iri_types.with_host
+let host = Iri_types.host
+let with_user = Iri_types.with_user
+let user = Iri_types.user
+let with_scheme = Iri_types.with_scheme
+let scheme = Iri_types.scheme
+let to_string = Iri_types.to_string
+let equal = Iri_types.equal
+let compare = Iri_types.compare
+let is_relative = Iri_types.is_relative
+let is_absolute = Iri_types.is_absolute
+let iri = Iri_types.iri
+type t = Iri_types.t
+type path = Iri_types.path = Absolute of string list | Relative of string list
+type query_kv = Iri_types.query_kv
+module KV = Iri_types.KV

@@ -1,3 +1,7 @@
+Next release:
+- improve error messages when encoutering invalid utf-8 characters
+- install iri.cmti
+
 0.3.0:
 - upgrade to OCaml 4.03.0
 
