@@ -64,7 +64,8 @@ let utf8_nb_bytes_of_char c =
         3
       else
         4
-let is_ucschar n =
+let is_ucschar c =
+  let n = Uchar.to_int c in
   (n >= 0xA0 && n <= 0xD7FF) ||
     (n >= 0xF900 && n<= 0xFDCF) ||
     (n >= 0xFDF0 && n <= 0xFFEF) ||
@@ -82,7 +83,8 @@ let is_ucschar n =
     (n >= 0xC0000 && n<= 0xCFFFD) ||
     (n >= 0xD0000 && n<= 0xDFFFD) ||
     (n >= 0xE1000 && n<= 0xEFFFD)
-let is_iprivate n =
+let is_iprivate c =
+  let n = Uchar.to_int c in
   (n >= 0xE000 && n <= 0xF8FF) ||
     (n >= 0xF0000 && n <= 0xFFFFD) ||
     (n >= 0x100000 && n <= 0x10FFFD)
@@ -132,9 +134,10 @@ let safe_chars =
   Array.init 256 f
 ;;
 
-let from_safe_chars ?(f=fun _ -> false) safe_chars n =
+let from_safe_chars ?(f=fun _ -> false) safe_chars c =
+  let n = Uchar.to_int c in
   assert (n >= 0);
-  if n > 255 then f n else safe_chars.(n)
+  if n > 255 then f c else safe_chars.(n)
 
 let scheme_safe_chars =
   let a = Array.copy safe_chars in
@@ -345,10 +348,10 @@ let encode_query_string_part = pct_encode query_part_safe_char
 
 let split_query_string =
   let dec = pct_decode in
-  let cp_equal = Char.code '=' in
-  let cp_amp = Char.code '&' in
-  let is_equal cp = cp = cp_equal in
-  let is_amp cp = cp = cp_amp in
+  let cp_equal = Uchar.of_char '=' in
+  let cp_amp = Uchar.of_char '&' in
+  let is_equal = Uchar.equal cp_equal in
+  let is_amp = Uchar.equal cp_amp in
   let add map str =
     match utf8_split is_equal str with
       [] | [_] -> KV.add (dec str) "" map

@@ -1,5 +1,6 @@
-Next release:
-- improve error messages when encoutering invalid utf-8 characters
+0.4.0:
+- move to Uutf 1.0.0 and Uunf 2.0.0
+- improve error messages when encountering invalid utf-8 characters
 - install iri.cmti
 
 0.3.0:

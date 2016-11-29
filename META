@@ -1,4 +1,4 @@
-version = "0.3.0"
+version = "0.4.0"
 description = "Pure OCaml implementation of Internationalized Resource Identifiers (IRIs) - RFC 3987"
 requires = "sedlex,uutf,uunf.string"
 archive(toploop) = "iri.cma"

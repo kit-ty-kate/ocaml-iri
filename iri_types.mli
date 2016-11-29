@@ -21,32 +21,32 @@ val is_absolute : t -> bool
 val is_relative : t -> bool
 
 val utf8_nb_bytes_of_char : char -> int
-val is_ucschar : int -> bool
-val is_iprivate : int -> bool
+val is_ucschar : Uchar.t -> bool
+val is_iprivate : Uchar.t -> bool
 val pct_decode : string -> string
 val safe_chars : bool array
-val from_safe_chars : ?f:(int -> bool) -> bool array -> int -> bool
+val from_safe_chars : ?f:(Uchar.t -> bool) -> bool array -> Uchar.t -> bool
 val scheme_safe_chars : bool array
-val scheme_safe_char : int -> bool
+val scheme_safe_char : Uchar.t -> bool
 val sub_delims : char array
 val user_safe_chars : bool array
-val user_safe_char : Uutf.uchar -> bool
+val user_safe_char : Uchar.t -> bool
 val host_safe_chars : bool array
-val host_safe_char : Uutf.uchar -> bool
+val host_safe_char : Uchar.t -> bool
 val path_safe_chars : bool array
-val path_safe_char : Uutf.uchar -> bool
+val path_safe_char : Uchar.t -> bool
 val query_part_safe_chars : bool array
-val query_part_safe_char : Uutf.uchar -> bool
+val query_part_safe_char : Uchar.t -> bool
 val fragment_safe_chars : bool array
-val fragment_safe_char : Uutf.uchar -> bool
-val pct_encode_utf8 : Buffer.t -> Uutf.uchar -> unit
-val pct_encode_b : Buffer.t -> (Uutf.uchar -> bool) -> string -> unit
-val pct_encode : (Uutf.uchar -> bool) -> string -> string
+val fragment_safe_char : Uchar.t -> bool
+val pct_encode_utf8 : Buffer.t -> Uchar.t -> unit
+val pct_encode_b : Buffer.t -> (Uchar.t -> bool) -> string -> unit
+val pct_encode : (Uchar.t -> bool) -> string -> string
 val pct_encode_query : string -> string
 val path_string : ?pctencode:bool -> t -> string
 val to_string : ?pctencode:bool -> t -> string
 val map_opt : ('a -> 'b) -> 'a option -> 'b option
-val utf8_split : (Uutf.uchar -> bool) -> string -> string list
+val utf8_split : (Uchar.t -> bool) -> string -> string list
 val encode_query_string_part : string -> string
 val split_query_string : string -> string KV.t
 val split_query_opt : string option -> string KV.t

@@ -99,13 +99,13 @@ let loc_of_pos pos len =
   }
 let error_pos ?msg pos = error ?msg (loc_of_pos pos 1)
 
-let nl_code = Char.code '\n'
+let nl_char = Uchar.of_char '\n'
 
 let update_pos pos str =
   let open Lexing in
   let f pos i = function
   | `Malformed msg -> error ~msg (loc_of_pos pos 1)
-  | `Uchar c when c = nl_code ->
+  | `Uchar c when Uchar.equal c nl_char ->
       let bol = pos.pos_cnum in
       { pos with
         pos_lnum = pos.pos_lnum + 1;
