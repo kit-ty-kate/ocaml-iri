@@ -61,6 +61,7 @@ let test_string str =
              match e with
              | Iri_lexer.Error e ->
                  Printf.sprintf "%s"  (Iri_lexer.string_of_error e)
+             | Iri.Error e ->  Iri.string_of_error e
              | e -> Printexc.to_string e
            in
            Printf.sprintf " [reparse failed: %s]" msg
@@ -69,6 +70,7 @@ let test_string str =
   | Iri_lexer.Error e ->
       prerr_endline (Printf.sprintf "%s: %s" str
        (Iri_lexer.string_of_error e))
+  | Iri.Error e ->  prerr_endline (Iri.string_of_error e)
   | e -> prerr_endline (Printexc.to_string e)
 
 let test_mine () =
