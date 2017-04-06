@@ -1,3 +1,7 @@
+Next release:
+- fix Iri.append_path: remove last empty string of path, if present,
+  before appending (to avoid having // in path)
+
 0.4.0:
 - move to Uutf 1.0.0 and Uunf 2.0.0
 - improve error messages when encountering invalid utf-8 characters

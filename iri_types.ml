@@ -414,10 +414,19 @@ let with_port t port = { t with port }
 
 let path t = t.path
 let with_path t path = { t with path }
+
 let append_path t strings =
+  let l = match t.path with
+    Absolute l | Relative l -> l
+  in
+  let l =
+    match List.rev l with
+      "" :: q -> (List.rev q) @ strings
+    | _ -> l @ strings
+  in
   let path = match t.path with
-    | Absolute l -> Absolute (l @ strings)
-    | Relative l -> Relative (l @ strings)
+    | Absolute _-> Absolute l
+    | Relative _ -> Relative l
   in
   with_path t path
 
