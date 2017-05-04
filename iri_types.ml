@@ -468,13 +468,6 @@ let query_set t k v =
 let fragment t = t.fragment
 let with_fragment t fragment = { t with fragment }
 
-let compare i1 i2 =
-  ignore(query_kv i1);
-  ignore(query_kv i2);
-  Pervasives.compare i1 i2
-
-let equal i1 i2 = compare i1 i2 = 0
-
 let normalize_path =
   let rec iter acc abs = function
     [] -> List.rev acc
@@ -546,6 +539,21 @@ let normalize ?(nfkc=true) t =
   let t = normalize_case t in
   let t = normalize_port t in
   if nfkc then normalize_nfkc t else t
+
+let compare i1 i2 =
+  ignore(query_kv i1);
+  ignore(query_kv i2);
+  Pervasives.compare i1 i2
+
+(*let compare i1 =
+  ignore(query_kv i1);
+  let i1 = normalize i1 in
+  fun i2 ->
+    ignore(query_kv i2);
+    let i2 = normalize i2 in
+    Pervasives.compare i1 i2
+*)
+let equal i1 i2 = compare i1 i2 = 0
 
 let to_uri =
   let user_safe_char = from_safe_chars user_safe_chars in
