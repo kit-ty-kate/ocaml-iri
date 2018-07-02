@@ -1,3 +1,6 @@
+Development has moved to https://framagit.org/zoggy/ocaml-iri
+
+
 # ocaml-iri
 OCaml implementation of Internationalized Resource Identifiers (IRIs)
 
