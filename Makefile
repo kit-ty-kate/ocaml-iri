@@ -27,7 +27,7 @@
 VERSION=0.4.0
 
 OCAMLFIND=ocamlfind
-PACKAGES=sedlex,uutf,uunf.string
+PACKAGES=sedlex,sedlex.ppx,uutf,uunf.string
 COMPFLAGS=-annot -bin-annot -safe-string -g
 OCAMLPP=
 
